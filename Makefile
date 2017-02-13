@@ -21,19 +21,27 @@ OBJS:=kernel.o start.o global.o kliba.o string.o klib.o \
 	printf.o vsprintf.o misc.o
 .PHONY : everything
 
-everything : $(BOOT_BIN) $(LDR_BIN) $(KERNEL_BIN)
+# everything : $(BOOT_BIN) $(LDR_BIN) $(KERNEL_BIN)
+# 	dd if=$(BOOT_BIN) of=$(IMG) bs=512 count=1 conv=notrunc
+# 	sudo mount -o loop $(IMG) $(FLOPPY)
+# 	sudo cp $(LDR_BIN) $(FLOPPY) -v
+# 	sudo cp $(KERNEL_BIN) $(FLOPPY) -v
+# 	sudo umount $(FLOPPY)
+everything:a.img
+
+clean :
+	rm -f *.bin *.o
+makeimage:
+	bximage -mode=create -fd=1.44M -q $(IMG)
+run :
+	bochs
+a.img:$(BOOT_BIN) $(LDR_BIN) $(KERNEL_BIN)
 	dd if=$(BOOT_BIN) of=$(IMG) bs=512 count=1 conv=notrunc
 	sudo mount -o loop $(IMG) $(FLOPPY)
 	sudo cp $(LDR_BIN) $(FLOPPY) -v
 	sudo cp $(KERNEL_BIN) $(FLOPPY) -v
 	sudo umount $(FLOPPY)
-
-clean :
-	rm -f *.bin *.o
-
-run :
-	bochs
-
+	
 boot.bin : boot/boot.asm $(INCLUDE_PATH)/*
 	nasm -I $(BOOT) $< -o $@
 

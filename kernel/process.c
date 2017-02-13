@@ -18,7 +18,6 @@ public void schedule() {
         }
     }
 }
-inline int pro
 
 //int sys_sendrec() {
 //
