@@ -41,7 +41,7 @@ typedef struct {
 typedef struct s_proc {
     STACKFRAME regs; // must be the first memeber of struct
     u16 ldt_sel;//ldt selector
-    DESCRIPTOR ldts[LDT_SIZE];
+    DESCRIPTOR ldts[LDT_SIZE];//0:code seg 1:data seg
     //above is essential and the sequence cannot be changed
     int ticks;
     int priority;
@@ -50,6 +50,7 @@ typedef struct s_proc {
     int nrtty;//index of tty
     int status;//receving sending runable
     MESSAGE *message;
+    u32 receivefrom;
 
 } PROCESS;
 
@@ -59,11 +60,15 @@ typedef struct s_task {
     int stacksize;
     char name[32];
 } TASK; // the essential info to create a process
+//recvivefrom
+#define ANY 0xfffffff0
+#define NOTASK (ANY - 0x1)
 
 //status
 #define RUNNABLE    0
 #define RECEVING    1
-#define SENDING     2
+#define SENDING     1<<1
+
 
 #define NR_PROCS    3
 #define NR_TASKS    2

@@ -124,5 +124,9 @@ typedef struct s_tss
 // void exception_handler(int vec_no, int error_code, int eip, int cs, int eflags);
 #define vir2phys(seg_base, vir) (u32)(((u32)seg_base) + (u32)(vir))
 
+/* descriptor indices in LDT */
+#define INDEX_LDT_C             0
+#define INDEX_LDT_RW            1
+
 void init_prot();
 #endif

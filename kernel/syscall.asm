@@ -1,13 +1,15 @@
 %include "sconst.inc"
 _NR_sendmessage equ 0
-_NR_write equ 1
-_NR_get_ticks equ 2
+_NR_receivemessage equ 1
+_NR_write equ 2
+_NR_get_ticks equ 3
 
 
 INT_VECTOR_SYS_CALL 	equ 0x90
-GLOBAL get_ticks
+; GLOBAL get_ticks
 GLOBAL write
 GLOBAL sendmessage
+GLOBAL receivemessage
 BITS 32
 section .text
 get_ticks:
@@ -27,4 +29,10 @@ sendmessage:
 	mov edx,[esp + 12];p_msg
 	int INT_VECTOR_SYS_CALL
 	ret
-
+receivemessage:
+	mov eax,_NR_receivemessage
+	mov ebx,[esp+4]
+	mov ecx,[esp+8]
+	mov edx,[esp+12]
+	int INT_VECTOR_SYS_CALL
+	ret

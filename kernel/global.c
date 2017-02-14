@@ -15,6 +15,8 @@ extern void systask();
 
 int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message);
 
+int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message);
+
 PROCESS process_table[NR_TASKS + NR_PROCS];
 char task_stack[STACK_SIZE_TOTAL];
 PROCESS *p_proc_ready;
@@ -31,7 +33,7 @@ TASK user_proc_table[NR_PROCS] = {{testA, STACK_SIZE_TESTA, "testA"},
                                   {testB, STACK_SIZE_TESTB, "testB"},
                                   {IDLE,  STACK_IDLE,       "idle"}};
 irq_handler irq_table[NR_IRQ];
-public system_call sys_call_table[NR_SYS_CALL] = {sys_sendmessage,sys_write,sys_get_ticks};
+public system_call sys_call_table[NR_SYS_CALL] = {sys_sendmessage, sys_receivemessage, sys_write, sys_get_ticks};
 int ticks;
 TTY tty_table[NR_CONSOLES];
 CONSOLE console_table[NR_CONSOLES];

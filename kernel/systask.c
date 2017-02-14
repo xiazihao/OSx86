@@ -9,10 +9,11 @@ void systask() {
 //        send_recv(RECEIVE, ANY, &msg);
     }
 }
+int get_ticks(){
 
+}
 void IDLE() {
     printf("idle is running");
     while (1) {
-
     }
 }

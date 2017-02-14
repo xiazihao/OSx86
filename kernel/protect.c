@@ -1,3 +1,4 @@
+#include <lib.h>
 #include "const.h"
 #include "global.h"
 #include "proto.h"

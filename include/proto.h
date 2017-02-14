@@ -51,6 +51,8 @@ int sys_write(PROCESS *p_process, char *buf, int len);
 //syscall.asm
 void write(char *buf, int len);
 
-void sendmessage(int function, int dest, MESSAGE *message);
+int sendmessage(int function, u32 dest, MESSAGE *message);
+
+int receivemessage(int function, u32 src, MESSAGE *message);
 
 #endif
