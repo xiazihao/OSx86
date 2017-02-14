@@ -3,6 +3,7 @@
 //
 #include "type.h"
 #include "proto.h"
+#include "lib.h"
 
 int vsprintf(char *buf, const char *format, va_list args) {
     char *p;
@@ -32,6 +33,10 @@ int vsprintf(char *buf, const char *format, va_list args) {
                 p_next_arg += 4;
                 break;
             case 'd':
+                int2str(temp, *((int *) p_next_arg));
+                strcpy(p, temp);
+                p_next_arg += 4;
+                p += strlen(temp);
                 break;
             default:
                 break;

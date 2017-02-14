@@ -3,22 +3,7 @@
 #include "global.h"
 #include "clock.h"
 #include "keyboard.h"
-
-void testA() {
-    while (1) {
-        printf("%s %x ","A",3);
-//        disp_str("A");
-        get_ticks();
-        milli_delay(10000);
-    }
-}
-
-void testB() {
-    while (1) {
-//        disp_str("B");
-        milli_delay(10000);
-    }
-}
+#include "lib.h"
 
 
 void kernel_main() {
@@ -44,7 +29,7 @@ void kernel_main() {
             eflags = 0x202;
 
         }
-        strcpy(p_proc->p_name, p_task->name);
+        strcpy(p_proc->name, p_task->name);
         p_proc->pid = i;
         p_proc->ldt_sel = selector_ldt;
         memcpy(&p_proc->ldts[0], &gdt[SELECTOR_KERNEL_CS >> 3], sizeof(DESCRIPTOR));
@@ -64,9 +49,10 @@ void kernel_main() {
 
         p_proc->nrtty = 0;
         p_proc->priority = 10;
+        p_proc->message = NULL;
+        p_proc->status = RUNNABLE;
         p_task_stack -= p_task->stacksize;
         p_proc++;
-//        p_task++;
         selector_ldt += 1 << 3;
 
     }

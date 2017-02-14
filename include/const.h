@@ -42,5 +42,5 @@
 //tty
 #define NR_CONSOLES 3
 //system call
-#define NR_SYS_CALL 2
+#define NR_SYS_CALL 3
 #endif

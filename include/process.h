@@ -25,6 +25,19 @@ typedef struct s_stackframe {
     u32 ss;
 } STACKFRAME;
 
+struct message1 {
+    int m1i1;
+    int m1i2;
+    int m1i3;
+    int m1i4;
+};
+typedef struct {
+    int type;
+    int dest;
+    union {
+        struct message1 msg1;
+    };
+} MESSAGE;
 typedef struct s_proc {
     STACKFRAME regs; // must be the first memeber of struct
     u16 ldt_sel;//ldt selector
@@ -33,16 +46,27 @@ typedef struct s_proc {
     int ticks;
     int priority;
     u32 pid;
-    char p_name[16];
+    char name[16];
     int nrtty;//index of tty
+    int status;//receving sending runable
+    MESSAGE *message;
+
 } PROCESS;
+
+
 typedef struct s_task {
     task_f initial_eip;
     int stacksize;
     char name[32];
 } TASK; // the essential info to create a process
-#define NR_PROCS 2
-#define NR_TASKS 1
+
+//status
+#define RUNNABLE    0
+#define RECEVING    1
+#define SENDING     2
+
+#define NR_PROCS    3
+#define NR_TASKS    2
 
 
 public int sys_get_ticks();
@@ -56,5 +80,7 @@ public void schedule();
 #define STACK_SIZE_TESTA    0x8000
 #define STACK_SIZE_TESTB    0x8000
 #define STACK_SIZE_TTY      0x8000
-#define STACK_SIZE_TOTAL    STACK_SIZE_TESTA + STACK_SIZE_TESTB + STACK_SIZE_TTY
+#define STACK_SYSTASK       0x8000
+#define STACK_IDLE          0x8000
+#define STACK_SIZE_TOTAL    STACK_SIZE_TESTA + STACK_SIZE_TESTB + STACK_SIZE_TTY + STACK_SYSTASK + STACK_IDLE
 #endif

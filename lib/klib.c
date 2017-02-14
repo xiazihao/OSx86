@@ -31,6 +31,31 @@ char *itoa(char *str, int num) {
     return str;
 }
 
+char *int2str(char *str, int num) {
+    char *p = str;
+    int single = 0;
+    int rest = num;
+    int count = 0;
+    do {
+        single = rest % 10;
+        rest = rest / 10;
+        *p = '0' + single;
+        p++;
+        count++;
+    } while (rest != 0);
+    *p = '\0';
+    p--;
+    char temp;
+    while (str < p) {
+        temp = *str;
+        *str = *p;
+        *p = temp;
+        str++;
+        p--;
+    }
+    return str;
+}
+
 void disp_int(int input) {
     char output[16];
     itoa(output, input);

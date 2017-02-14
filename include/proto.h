@@ -25,16 +25,7 @@ public void disp_int(int input);
 public void init_8259A();
 
 public void put_irq_handler(int irq, irq_handler handler);
-//klib.c
-public void *memcpy(void *pDst, void *pSrc, int iSize);
 
-public void memset(void const *p_dst, char ch, int size);
-
-public char *strcpy(const char *p_dst, const char *p_src);
-
-char *itoa(char *str, int num);
-
-unsigned int strlen(const char *string);
 //kernel.asm
 public void restart();
 
@@ -55,20 +46,11 @@ int vsprintf(char *buf, const char *format, va_list args);
 int printf(const char *format, ...);
 
 //tty.c
-int sys_write(PROCESS *p_process,char *buf, int len);
+int sys_write(PROCESS *p_process, char *buf, int len);
 
 //syscall.asm
 void write(char *buf, int len);
 
-#define ASSERT
-#ifdef ASSERT
-
-void assertion_failure(char *exp, char *file, char *basefile, int line);
-
-#define assert(exp) if(exp);\
-else assertion_failure(#exp,__FILE__,__BASE_FILE__,__LINE_);
-#else
-#define assert(exp)
-#endif
+void sendmessage(int function, int dest, MESSAGE *message);
 
 #endif

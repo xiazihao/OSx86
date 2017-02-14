@@ -5,9 +5,9 @@
 BOOT:=boot.asm
 LDR:=loader.asm
 KERNEL:=kernel.asm
-BOOT_BIN:=boot.bin
-LDR_BIN:=loader.bin
-KERNEL_BIN:=kernel.bin
+BOOT_BIN:=build/boot.bin
+LDR_BIN:=build/loader.bin
+KERNEL_BIN:=build/kernel.bin
 INCLUDE_PATH:=include/
 BOOT:=boot/
 LIB:=lib/
@@ -16,9 +16,11 @@ FLOPPY:=/mnt/floppy/
 GCCFLG:=-m32 -c -I $(INCLUDE_PATH) -fno-stack-protector -fno-builtin
 ASMFLG:= -f elf -I $(INCLUDE_PATH)
 LDFLG:= -m elf_i386 -s -Ttext 0x30400
-OBJS:=kernel.o start.o global.o kliba.o string.o klib.o \
-	i8259.o protect.o main.o clock.o syscall.o process.o keyboard.o tty.o console.o \
-	printf.o vsprintf.o misc.o
+OBJS:=build/kernel.o build/start.o build/global.o build/kliba.o \
+	build/string.o build/klib.o build/i8259.o build/protect.o \
+	build/main.o build/clock.o build/syscall.o build/process.o \
+	build/keyboard.o build/tty.o build/console.o build/printf.o build/vsprintf.o \
+	build/systask.o build/misc.o
 .PHONY : everything
 
 # everything : $(BOOT_BIN) $(LDR_BIN) $(KERNEL_BIN)
@@ -30,7 +32,7 @@ OBJS:=kernel.o start.o global.o kliba.o string.o klib.o \
 everything:a.img
 
 clean :
-	rm -f *.bin *.o
+	rm -f build/*
 makeimage:
 	bximage -mode=create -fd=1.44M -q $(IMG)
 run :
@@ -42,65 +44,68 @@ a.img:$(BOOT_BIN) $(LDR_BIN) $(KERNEL_BIN)
 	sudo cp $(KERNEL_BIN) $(FLOPPY) -v
 	sudo umount $(FLOPPY)
 	
-boot.bin : boot/boot.asm $(INCLUDE_PATH)/*
+build/boot.bin : boot/boot.asm $(INCLUDE_PATH)/*
 	nasm -I $(BOOT) $< -o $@
 
-loader.bin : boot/loader.asm $(INCLUDE_PATH)/*
+build/loader.bin : boot/loader.asm $(INCLUDE_PATH)/*
 	nasm -I $(BOOT) $< -o $@
 
-kernel.bin : $(OBJS) $(INCLUDE_PATH)/*
+build/kernel.bin : $(OBJS) $(INCLUDE_PATH)/*
 	ld $(LDFLG) -o $@ $(OBJS)
 
-start.o:kernel/start.c $(INCLUDE_PATH)/*
-	gcc $(GCCFLG) -o start.o kernel/start.c
+build/start.o:kernel/start.c $(INCLUDE_PATH)/*
+	gcc $(GCCFLG) -o $@ $<
 
-kliba.o:lib/kliba.asm $(INCLUDE_PATH)/*
+build/kliba.o:lib/kliba.asm $(INCLUDE_PATH)/*
 	nasm $(ASMFLG) -o $@ $<
 
-string.o:lib/string.asm $(INCLUDE_PATH)/*
+build/string.o:lib/string.asm $(INCLUDE_PATH)/*
 	nasm $(ASMFLG) -o $@ $<
 
-syscall.o:kernel/syscall.asm $(INCLUDE_PATH)/*
+build/syscall.o:kernel/syscall.asm $(INCLUDE_PATH)/*
 	nasm $(ASMFLG) -o $@ $<
 
-kernel.o:kernel/kernel.asm $(INCLUDE_PATH)/*
-	nasm $(ASMFLG) -o kernel.o $<
+build/kernel.o:kernel/kernel.asm $(INCLUDE_PATH)/*
+	nasm $(ASMFLG) -o $@ $<
 
-i8259.o:kernel/i8259.c $(INCLUDE_PATH)/*
+build/i8259.o:kernel/i8259.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-global.o:kernel/global.c $(INCLUDE_PATH)/*
+build/global.o:kernel/global.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-protect.o:kernel/protect.c $(INCLUDE_PATH)/*
+build/protect.o:kernel/protect.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-klib.o:lib/klib.c $(INCLUDE_PATH)/*
+build/klib.o:lib/klib.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-main.o:kernel/main.c $(INCLUDE_PATH)/*
+build/main.o:kernel/main.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-clock.o:kernel/clock.c $(INCLUDE_PATH)/*
+build/clock.o:kernel/clock.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-process.o:kernel/process.c $(INCLUDE_PATH)/*
+build/process.o:kernel/process.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-keyboard.o:kernel/keyboard.c $(INCLUDE_PATH)/*
+build/keyboard.o:kernel/keyboard.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-tty.o:kernel/tty.c $(INCLUDE_PATH)/*
+build/tty.o:kernel/tty.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-console.o:kernel/console.c $(INCLUDE_PATH)/*
+build/console.o:kernel/console.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-printf.o:kernel/printf.c $(INCLUDE_PATH)/*
+build/printf.o:kernel/printf.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-vsprintf.o:kernel/vsprintf.c $(INCLUDE_PATH)/*
+build/vsprintf.o:kernel/vsprintf.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
-misc.o:lib/misc.c $(INCLUDE_PATH)/*
+build/misc.o:lib/misc.c $(INCLUDE_PATH)/*
+	gcc $(GCCFLG) -o $@ $<
+
+build/systask.o:kernel/systask.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<

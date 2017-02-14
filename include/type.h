@@ -15,4 +15,8 @@ typedef void (*irq_handler)(int irq);
 typedef void *system_call;
 
 typedef char *va_list;
+
+#define NULL    0
+#define TRUE    1
+#define FALSE   0
 #endif

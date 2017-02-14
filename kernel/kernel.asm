@@ -275,6 +275,7 @@ sys_call:
 	call save
 	sti
 	push esi
+	
 	push edx
 	
 	
