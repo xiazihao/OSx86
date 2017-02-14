@@ -33,7 +33,7 @@ struct message1 {
 };
 typedef struct {
     int type;
-    int dest;
+    u32 obj;
     union {
         struct message1 msg1;
     };

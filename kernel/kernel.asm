@@ -273,7 +273,7 @@ exception:
 
 sys_call:
 	call save
-	sti
+	
 	push esi
 	
 	push edx
@@ -282,6 +282,7 @@ sys_call:
 	push ecx
 	push ebx
 	push dword[p_proc_ready]
+	sti
 	call [sys_call_table + 4*eax]
 	add esp,4*4
 	pop esi

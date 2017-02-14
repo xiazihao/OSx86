@@ -9,6 +9,8 @@
 
 static u32 getPid(PROCESS *process);
 
+static int physicSet(void *dst, u8 value, int size);
+
 static int physicCopy(void *dest, void *src, int size);
 
 static u32 getLinearAddr(PROCESS *process, void *virtualAddr);
@@ -18,15 +20,17 @@ public int sys_get_ticks() {
 }
 
 public void schedule() {
-    if (p_proc_ready->ticks > 0) {
+    if (p_proc_ready->ticks > 0 && p_proc_ready->status == RUNNABLE) {
         return;
     }
-    p_proc_ready->ticks = p_proc_ready->priority;
+    if (p_proc_ready->ticks <= 0) {
+        p_proc_ready->ticks = p_proc_ready->priority;
+    }
     do {
         p_proc_ready++;
         if (p_proc_ready >= process_table + NR_TASKS + NR_PROCS) {
             p_proc_ready = process_table;
-            assert(p_proc_ready[NR_TASKS + NR_PROCS - 1].status == RUNNABLE);
+            assert(p_proc_ready[NR_TASKS + NR_PROCS - 1].status == RUNNABLE);//IDLE task should be always RUNNABLE
         }
         if (p_proc_ready->status == RUNNABLE) {
             break;
@@ -35,29 +39,43 @@ public void schedule() {
 }
 
 
-int sys_sendmessage(PROCESS *process, int function, u32 dest, MESSAGE *message) {
+int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) {
     assert(getPid(process) != dest);
     assert(dest < NR_PROCS + NR_TASKS);
     PROCESS *sender = process;
     PROCESS *receiver = &process_table[dest];
+    assert(dest == receiver->pid);
+    if (process->status != RUNNABLE) {
+        return 2;
+    }
     if (receiver->receivefrom == ANY || receiver->receivefrom == dest) {
         assert(receiver->message != NULL);
+        MESSAGE temp;
+        physicSet(&temp, 0, sizeof(MESSAGE));
         u32 srcLinear = getLinearAddr(sender, message);
         u32 destLinear = getLinearAddr(receiver, receiver->message);
-        physicCopy((void*)destLinear, (void*)srcLinear, sizeof(MESSAGE));
+        physicCopy(&temp, (void *) srcLinear, sizeof(MESSAGE));
+        temp.obj = sender->pid;
+        physicCopy((void *) destLinear, &temp, sizeof(MESSAGE));
+        ((MESSAGE*) destLinear)->obj = sender->pid;
+//        physicCopy((void *) destLinear, (void *) srcLinear, sizeof(MESSAGE));
         receiver->status = RUNNABLE;
+        assert(receiver->status == RUNNABLE);
+//        schedule();
         return 0;
     }
     return 1;
-
 }
 
 int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message) {
     assert(message != NULL);
     assert(src == ANY || src == NOTASK || src < (NR_TASKS + NR_PROCS));
+    assert(process->status == RUNNABLE);
     process->receivefrom = src;
     process->message = message;
     process->status = RECEVING;
+    assert(process->status == RECEVING);
+    schedule();
 }
 
 static u32 getLinearAddr(PROCESS *process, void *virtualAddr) {
@@ -76,32 +94,29 @@ static int physicCopy(void *dest, void *src, int size) {
     }
 }
 
+static int physicSet(void *dst, u8 value, int size) {
+    char *p_d = (char *) dst;
+    for (int i = 0; i < size; ++i) {
+        *p_d++ = value;
+    }
+}
+
 static u32 getPid(PROCESS *process) {
     return process->pid;
 }
 
 void testA() {
     MESSAGE message;
+    memset(&message, 0, sizeof(MESSAGE));
     message.msg1.m1i1 = 10;
-    message.type = 1;
-    int result;
     while (1) {
-//        result = sendmessage(0, NR_TASKS + 1, &message);
-//        printf("result: %d\n", result);
-//        printf("ticks: %d", get_ticks());
-//        assert(1 > 2);
-        milli_delay(10000);
-        milli_delay(10000);
-        milli_delay(10000);
+        printf("ticks: %d", get_ticks());
         milli_delay(10000);
     }
 }
 
 void testB() {
-    MESSAGE message;
     while (1) {
-//        receivemessage(0, ANY, &message);
-//        printf("B: %d %d\n", message.msg1.m1i1,message.type);
         milli_delay(10000);
     }
 }
