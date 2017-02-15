@@ -1,3 +1,4 @@
+#include <process.h>
 #include "proto.h"
 #include "process.h"
 #include "global.h"
@@ -48,9 +49,11 @@ void kernel_main() {
         p_proc->regs.eflags = eflags;
 
         p_proc->nrtty = 0;
-        p_proc->priority = 10;
+        p_proc->priority = 5;
         p_proc->message = NULL;
         p_proc->status = RUNNABLE;
+        p_proc->queue.count = 0;
+        p_proc->queue.start = NULL;
         p_task_stack -= p_task->stacksize;
         p_proc++;
         selector_ldt += 1 << 3;
@@ -60,6 +63,7 @@ void kernel_main() {
     p_proc_ready = process_table;
     k_reenter = 0;
 
+    init_queue();
     init_clock();
     ticks = 0;
 

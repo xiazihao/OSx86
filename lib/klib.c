@@ -63,7 +63,7 @@ void disp_int(int input) {
 }
 
 unsigned int strlen(char const *string) {
-    int num = 0;
+    unsigned int num = 0;
     char const *p = string;
     while (*p) {
         p++;

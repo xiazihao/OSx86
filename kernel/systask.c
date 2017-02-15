@@ -2,42 +2,45 @@
 #include <proto.h>
 #include <global.h>
 #include <lib.h>
+#include <systask.h>
 
 //
 // Created by xiazihao on 2/11/17.
 //
 #define SYSTASKPID 1
 
+
 void systask() {
     MESSAGE message;
     memset(&message, 0, sizeof(MESSAGE));
     u32 side;
     while (1) {
-        side = receivemessage(0, ANY, &message);
+        while (receivemessage(0, ANY, &message));//return 0: receive
+        side = message.sender;
         switch (message.type) {
-            case 1:
-                assert(message.type == 1);
-                assert(message.msg1.m1i1 == 10);
+            case SYSGETTICKS:
                 message.msg1.m1i1 = ticks;
                 sendmessage(0, side, &message);
                 break;
-            default:
-                break;
         }
+
+//        printf("side: %d", side);
+//        assert(side == 2);
 
     }
 
 }
 
+
 int get_ticks() {
     MESSAGE message;
     memset(&message, 0, sizeof(MESSAGE));
-    message.type = 1;
-    message.msg1.m1i1 = 10;
+    message.type = SYSGETTICKS;
     if (!sendmessage(0, SYSTASKPID, &message)) {
-        receivemessage(0, ANY, &message);
+        while (receivemessage(0, ANY, &message));
+        return message.msg1.m1i1;
     }
-    return message.msg1.m1i1;
+    return 0;
 
 
 }

@@ -38,9 +38,11 @@
 //interrupt index
 #define CLOCK_IRQ 0
 #define KEYBOARD_IRQ 1
+#define CASCADE_IRQ	2
+#define AT_WINI_IRQ 14
 
 //tty
 #define NR_CONSOLES 3
 //system call
-#define NR_SYS_CALL 4
+#define NR_SYS_CALL 3
 #endif
