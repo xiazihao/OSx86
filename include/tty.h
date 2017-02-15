@@ -9,7 +9,7 @@
 #include "console.h"
 #include "process.h"
 #define  TTY_IN_BYTES 256
-typedef struct s_console;
+//typedef struct s_console;
 typedef struct s_tty {
     u32 in_buf[TTY_IN_BYTES];
     u32 *p_inbuf_head;

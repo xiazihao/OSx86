@@ -54,17 +54,18 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
         physicSet(&temp, 0, sizeof(MESSAGE));
         u32 srcLinear = getLinearAddr(sender, message);
         u32 destLinear = getLinearAddr(receiver, receiver->message);
+        //firstly copy message to the kernel and then copy it to target process
         physicCopy(&temp, (void *) srcLinear, sizeof(MESSAGE));
-        temp.obj = sender->pid;
         physicCopy((void *) destLinear, &temp, sizeof(MESSAGE));
-        ((MESSAGE*) destLinear)->obj = sender->pid;
+        //directly copy message from source to target process
 //        physicCopy((void *) destLinear, (void *) srcLinear, sizeof(MESSAGE));
+        receiver->regs.eax = sender->pid;//set receivemessage return value as sender's pid
         receiver->status = RUNNABLE;
         assert(receiver->status == RUNNABLE);
 //        schedule();
         return 0;
     }
-    return 1;
+    return 1;//error
 }
 
 int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message) {

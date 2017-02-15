@@ -23,6 +23,10 @@ public void init_clock(){
     enable_irq(CLOCK_IRQ);
 }
 public void milli_delay(int milli_sec) {
-    int t = get_ticks();
-    while (((get_ticks() - t) * 1000 / HZ) < milli_sec) {};
+    int i;
+    for(int j = 0; j < milli_sec;j++) {
+        for (i = 0; i < 100; i++);
+    }
+//    int t = get_ticks();
+//    while (((get_ticks() - t) * 1000 / HZ) < milli_sec) {};
 }

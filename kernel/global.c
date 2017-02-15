@@ -9,7 +9,7 @@ extern void testB();
 
 extern void task_tty();
 
-extern IDLE();
+extern void IDLE();
 
 extern void systask();
 

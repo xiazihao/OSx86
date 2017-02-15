@@ -4,7 +4,7 @@
 
 #include <proto.h>
 
-void assertion_failure(char *exp, char *file, char *base_file, int line, char *function) {
+void assertion_failure(char const *exp, char const *file, char const *base_file, const int line, char const *function) {
     printf("\nassert(%s) failed in file: %s\nbase file: %s\nline: %d\nfunction: %s\n", exp, file, base_file, line,
            function);
     while (1);

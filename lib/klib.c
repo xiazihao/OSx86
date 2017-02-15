@@ -62,9 +62,9 @@ void disp_int(int input) {
     disp_str(output);
 }
 
-unsigned int strlen(const char *string) {
+unsigned int strlen(char const *string) {
     int num = 0;
-    char *p = string;
+    char const *p = string;
     while (*p) {
         p++;
         num++;
@@ -82,9 +82,9 @@ public void *memcpy(void *pDst, void *pSrc, int iSize) {
     }
 }
 
-public char *strcpy(const char *p_dst, const char *p_src) {
+public char *strcpy(char  *p_dst, char const *p_src) {
     char *p_d = p_dst;
-    char *p_s = p_src;
+    char const *p_s = p_src;
     while (*p_s) {
         *p_d = *p_s;
         p_d++;

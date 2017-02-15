@@ -1,3 +1,4 @@
+#include <lib.h>
 #include "type.h"
 #include "protect.h"
 #include "const.h"
@@ -5,7 +6,7 @@
 #include "global.h"
 
 
-
+//prepare gdtr, idtr, idt, should be called very early
 public void cstart() {
 	disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 	         "-----\"cstart\" begins-----\n");
