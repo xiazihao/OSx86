@@ -54,6 +54,8 @@ public void schedule() {
 void init_queue() {
     for (int i = 0; i < QUEUESIZE; ++i) {
         memset(&messageQueue[i], 0, sizeof(MESSAGE));
+        messageQueue[i].next = NULL;
+        messageQueue[i].prev = NULL;
     }
 }
 
@@ -64,9 +66,9 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
     PROCESS *sender = process;
     PROCESS *receiver = &process_table[dest];
     if (receiver->receivefrom == ANY || receiver->receivefrom == dest) {
-        if (receiver->queue.start == NULL) { //it is receiver's first message, create a queue
+        if (receiver->queue.count == 0) { //it is receiver's first message, create a queue
             assert(receiver->queue.last == NULL);
-            assert(receiver->queue.count == 0);
+            assert(receiver->queue.start == NULL);
             receiver->queue.start = getQueuePosition();
             if (receiver->queue.start == NULL) {
                 return 2;//get queque faild
@@ -74,9 +76,9 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             receiver->queue.last = receiver->queue.start;
             receiver->queue.count++;
             assert(receiver->queue.count == 1);
-            receiver->queue.start->prev = NULL;
-            receiver->queue.last->next = NULL;
             physicCopy(receiver->queue.start, (void *) getLinearAddr(sender, message), sizeof(MESSAGE));
+            receiver->queue.start->prev = NULL;
+            receiver->queue.start->next = NULL;
             receiver->queue.start->sender = sender->pid;
             receiver->queue.start->active = TRUE;
         } else { // insert at start
@@ -90,9 +92,17 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             temp->active = TRUE;
             receiver->queue.start->prev = temp;
             receiver->queue.start = temp;
+            if (receiver->queue.count > 1) {
+                assert(receiver->queue.start->next->prev == receiver->queue.start);
+                assert(receiver->queue.last->prev->next == receiver->queue.last);
+            }
+
             receiver->queue.count++;
         }
         receiver->status = RUNNABLE;
+        if (receiver->queue.count == 1) {
+            assert(receiver->queue.last == receiver->queue.start);
+        }
         assert(receiver->queue.start != NULL);
         assert(receiver->queue.last != NULL);
         assert(receiver->queue.count != NULL);
@@ -112,18 +122,25 @@ int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message
         temp = process->queue.last;
         if (process->queue.count == 1) {//only one message
             assert(process->queue.start == process->queue.last);
-            process->queue.start = process->queue.last = NULL;
+            process->queue.start = NULL;
+            process->queue.last = NULL;
         } else {
-            process->queue.last->prev->next = NULL;
-
+            assert(temp->prev != NULL);
+            assert(temp->prev->next == temp);
+            temp->prev->next = NULL;
+            process->queue.last = temp->prev;
+            if (process->queue.count == 1) {
+                assert(process->queue.start == process->queue.last);
+            }
         }
-        physicCopy(getLinearAddr(process, message), temp, sizeof(MESSAGE));
+        physicCopy((void *) getLinearAddr(process, message), temp, sizeof(MESSAGE));
         temp->active = FALSE;
         process->queue.count--;
         return 0;
     }
     // no message in quequ
     process->status = RECEVING;
+    assert(process->queue.count == 0);
     schedule();
     return 1;
 }
@@ -161,20 +178,23 @@ void testA() {
     int result;
     int count = 0;
     while (1) {
-
+        printf("A:%d  ", get_ticks());
+        milli_delay(1000);
 //        result = sendmessage(0, 1, &message);
-        printf("A :%d ", get_ticks());
+//        result = sendmessage(0, 1, &message);
+//        printf("A :%d ", 4);
 //        count++;
 //        if (result) {
 //            printf("count: %d,result: %d", count - 1, result);
+//            while (1);
 //        }
-        milli_delay(10000);
+
     }
 }
 
 void testB() {
     while (1) {
 //        printf("B: %d", get_ticks());
-//        milli_delay(10000);
+        milli_delay(1000);
     }
 }
