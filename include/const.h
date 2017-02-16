@@ -1,7 +1,5 @@
 #ifndef __const_H
 #define __const_H
-#define public
-#define private static
 #define GDT_SIZE 128
 #define IDT_SIZE 256
 #define NR_IRQ 16
@@ -10,7 +8,6 @@
 #define INT_M_CTLMASK 0x21 //ocw2
 #define INT_S_CTL 0xa0
 #define INT_S_CTLMASK 0xa1    //ocw2
-#define EXTERN extern
 //PIT clock
 #define TIMER0 0x40
 #define TIME_MODE 0x43

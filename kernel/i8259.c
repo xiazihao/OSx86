@@ -40,11 +40,11 @@ void init_8259A() {
 		irq_table[i] = spurious_irq;
 	}
 }
-public void put_irq_handler(int irq, irq_handler handler){
+void put_irq_handler(int irq, irq_handler handler){
 	disable_irq(irq);
 	irq_table[irq] = handler;
 }
-public void spurious_irq(int irq) {
+void spurious_irq(int irq) {
 	disp_str("spurious_irq: ");
 	disp_int(irq);
 	// disp_int("\n");

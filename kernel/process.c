@@ -1,5 +1,6 @@
 #include <lib.h>
 #include <process.h>
+#include <systask.h>
 #include "const.h"
 #include "global.h"
 #include "protect.h"
@@ -7,7 +8,7 @@
 #include "type.h"
 #include "process.h"
 
-MESSAGE messageQueue[QUEUESIZE];
+MESSAGECHAIN messageQueue[QUEUESIZE];
 
 static u32 getPid(PROCESS *process);
 
@@ -17,9 +18,9 @@ static int physicCopy(void *dest, void *src, int size);
 
 static u32 getLinearAddr(PROCESS *process, void *virtualAddr);
 
-static MESSAGE *getQueuePosition();
+static MESSAGECHAIN *getQueuePosition();
 
-static MESSAGE *getQueuePosition() {
+static MESSAGECHAIN *getQueuePosition() {
     for (int i = 0; i < QUEUESIZE; ++i) {
         if (!messageQueue[i].active) {
             return &messageQueue[i];
@@ -28,11 +29,11 @@ static MESSAGE *getQueuePosition() {
     return NULL;
 }
 
-public int sys_get_ticks() {
-    return ticks;
-}
+//public int sys_get_ticks() {
+//    return ticks;
+//}
 
-public void schedule() {
+void schedule() {
     if (p_proc_ready->ticks > 0 && p_proc_ready->status == RUNNABLE) {
         return;
     }
@@ -53,16 +54,16 @@ public void schedule() {
 
 void init_queue() {
     for (int i = 0; i < QUEUESIZE; ++i) {
-        memset(&messageQueue[i], 0, sizeof(MESSAGE));
-        messageQueue[i].next = NULL;
-        messageQueue[i].prev = NULL;
+        memset(&messageQueue[i], 0, sizeof(MESSAGECHAIN));
+//        messageQueue[i].next = NULL;
+//        messageQueue[i].prev = NULL;
     }
 }
 
 int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) {
     assert(getPid(process) != dest);
     assert(dest < NR_PROCS + NR_TASKS);
-    MESSAGE *temp;
+    MESSAGECHAIN *temp;
     PROCESS *sender = process;
     PROCESS *receiver = &process_table[dest];
     if (receiver->receivefrom == ANY || receiver->receivefrom == dest) {
@@ -76,10 +77,10 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             receiver->queue.last = receiver->queue.start;
             receiver->queue.count++;
             assert(receiver->queue.count == 1);
-            physicCopy(receiver->queue.start, (void *) getLinearAddr(sender, message), sizeof(MESSAGE));
+            physicCopy(&receiver->queue.start->message, (void *) getLinearAddr(sender, message), sizeof(MESSAGE));
             receiver->queue.start->prev = NULL;
             receiver->queue.start->next = NULL;
-            receiver->queue.start->sender = sender->pid;
+            receiver->queue.start->message.sender = sender->pid;
             receiver->queue.start->active = TRUE;
         } else { // insert at start
             temp = getQueuePosition();
@@ -116,7 +117,7 @@ int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message
     assert(src == ANY || src == NOTASK || src < (NR_TASKS + NR_PROCS));
     assert(process->status == RUNNABLE);
     process->receivefrom = src;
-    MESSAGE *temp;
+    MESSAGECHAIN *temp;
     if (process->queue.count > 0) {
         assert(process->queue.last != NULL);
         temp = process->queue.last;
@@ -133,13 +134,13 @@ int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message
                 assert(process->queue.start == process->queue.last);
             }
         }
-        physicCopy((void *) getLinearAddr(process, message), temp, sizeof(MESSAGE));
+        physicCopy((void *) getLinearAddr(process, message), &temp->message, sizeof(MESSAGE));
         temp->active = FALSE;
         process->queue.count--;
-        return 0;
+        return 0;//get queue
     }
     // no message in quequ
-    process->status = RECEVING;
+//    process->status = RECEVING;
     assert(process->queue.count == 0);
     schedule();
     return 1;
@@ -179,15 +180,8 @@ void testA() {
     int count = 0;
     while (1) {
         printf("A:%d  ", get_ticks());
-        milli_delay(1000);
-//        result = sendmessage(0, 1, &message);
-//        result = sendmessage(0, 1, &message);
-//        printf("A :%d ", 4);
-//        count++;
-//        if (result) {
-//            printf("count: %d,result: %d", count - 1, result);
-//            while (1);
-//        }
+//        milli_delay(1000);
+        wait(100);
 
     }
 }

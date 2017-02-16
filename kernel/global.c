@@ -33,7 +33,7 @@ TASK user_proc_table[NR_PROCS] = {{testA, STACK_SIZE_TESTA, "testA"},
                                   {testB, STACK_SIZE_TESTB, "testB"},
                                   {IDLE,  STACK_IDLE,       "idle"}};
 irq_handler irq_table[NR_IRQ];
-public system_call sys_call_table[NR_SYS_CALL] = {sys_sendmessage, sys_receivemessage, sys_write};
+system_call sys_call_table[NR_SYS_CALL] = {sys_sendmessage, sys_receivemessage, sys_write};
 int ticks;
 TTY tty_table[NR_CONSOLES];
 CONSOLE console_table[NR_CONSOLES];

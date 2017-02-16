@@ -50,10 +50,10 @@ void kernel_main() {
 
         p_proc->nrtty = 0;
         p_proc->priority = 5;
-        p_proc->message = NULL;
         p_proc->status = RUNNABLE;
         p_proc->queue.count = 0;
         p_proc->queue.start = NULL;
+        p_proc->queue.last = NULL;
         p_task_stack -= p_task->stacksize;
         p_proc++;
         selector_ldt += 1 << 3;

@@ -72,7 +72,7 @@ unsigned int strlen(char const *string) {
     return num;
 }
 
-public void *memcpy(void *pDst, void *pSrc, int iSize) {
+void *memcpy(void *pDst, void *pSrc, int iSize) {
     u8 *pD = pDst;
     u8 *pS = pSrc;
     for (int i = 0; i < iSize; ++i) {
@@ -82,7 +82,7 @@ public void *memcpy(void *pDst, void *pSrc, int iSize) {
     }
 }
 
-public char *strcpy(char  *p_dst, char const *p_src) {
+char *strcpy(char  *p_dst, char const *p_src) {
     char *p_d = p_dst;
     char const *p_s = p_src;
     while (*p_s) {
@@ -92,7 +92,7 @@ public char *strcpy(char  *p_dst, char const *p_src) {
     }
 }
 
-public void memset(void const *p_dst, char ch, int size) {
+void memset(void const *p_dst, char ch, int size) {
     char *p_d = (char *) p_dst;
     for (int i = 0; i < size; ++i) {
         *p_d++ = ch;

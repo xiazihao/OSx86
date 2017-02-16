@@ -20,7 +20,7 @@ static void tty_do_read(TTY *p_tty);
 
 int is_current_console(CONSOLE *p_console);
 
-public void task_tty() {
+void task_tty() {
     TTY *p_tty;
     init_keyboard();
     for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
@@ -35,7 +35,7 @@ public void task_tty() {
     }
 }
 
-public void in_process(TTY *p_tty, u32 key) {
+void in_process(TTY *p_tty, u32 key) {
 
     if (!(key & FLAG_EXT)) { // the key is not extension
         put_key(p_tty, key);
@@ -134,13 +134,13 @@ int sys_write(PROCESS *p_process, char *buf, int len) {
     return 0;
 }
 
-int sys_printx(PROCESS *p_process, int _unused1, int _unused2, char *s) {
-    const char *p;
-    char ch;
-    char reenter_err[] = "? k_reenter is incorrect for unkown reason";
-    reenter_err[0] = MAG_CH_PANIC;
-    if (k_reenter == 0) {
-
-    }
-
-}
+//int sys_printx(PROCESS *p_process, int _unused1, int _unused2, char *s) {
+//    const char *p;
+//    char ch;
+//    char reenter_err[] = "? k_reenter is incorrect for unkown reason";
+//    reenter_err[0] = MAG_CH_PANIC;
+//    if (k_reenter == 0) {
+//
+//    }
+//
+//}

@@ -12,32 +12,32 @@
 #define INT_VECTOR_SYS_CALL 0x90
 
 //kliba.asm
-public void out_byte(u16 port, u8 value);
+void out_byte(u16 port, u8 value);
 
-public u8 in_byte(u16 port);
+u8 in_byte(u16 port);
 
-public void disp_str(char *info);
+void disp_str(char *info);
 
-public void disp_color_str(char *info, int color);
+void disp_color_str(char *info, int color);
 
-public void disp_int(int input);
+void disp_int(int input);
 //i8259.h
-public void init_8259A();
+void init_8259A();
 
-public void put_irq_handler(int irq, irq_handler handler);
+void put_irq_handler(int irq, irq_handler handler);
 
 //kernel.asm
-public void restart();
+void restart();
 
-public void disable_irq(int irq);
+void disable_irq(int irq);
 
-public void enable_irq(int irq);
+void enable_irq(int irq);
 
-public void disable_int();
+void disable_int();
 
-public void enable_int();
+void enable_int();
 //clock.c
-public void milli_delay(int milli_sec);
+void milli_delay(int milli_sec);
 
 //vsprintf.c
 int vsprintf(char *buf, const char *format, va_list args);

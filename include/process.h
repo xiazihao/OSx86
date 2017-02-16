@@ -4,7 +4,6 @@
 #include "const.h"
 #include "protect.h"
 
-typedef struct s_message MESSAGE;
 typedef struct s_stackframe {
     u32 gs;
     u32 fs;
@@ -26,27 +25,40 @@ typedef struct s_stackframe {
     u32 ss;
 } STACKFRAME;
 
+
 struct msg1 {
     int m1i1;
     int m1i2;
     int m1i3;
     int m1i4;
 };
+
+
 typedef struct s_message {
-    int active;
     int type;
     u32 sender;
-    MESSAGE *next;
-    MESSAGE *prev;
     union {
         struct msg1 msg1;
     };
 } MESSAGE;
+
+typedef struct s_messageQueueElement MESSAGECHAIN;
+
+typedef struct s_messageQueueElement {
+    MESSAGE message;
+    MESSAGECHAIN *next;
+    MESSAGECHAIN *prev;
+    int active;
+} MESSAGECHAIN;
+
+
 typedef struct {
-    MESSAGE *start;
-    MESSAGE *last;
+    MESSAGECHAIN *start;
+    MESSAGECHAIN *last;
     int count;
 } MESSAGEQUEUE;
+
+
 typedef struct s_proc {
     STACKFRAME regs; // must be the first memeber of struct
     u16 ldt_sel;//ldt selector
@@ -58,11 +70,8 @@ typedef struct s_proc {
     char name[16];
     int nrtty;//index of tty
     int status;//receving sending runable
-    MESSAGE *message;
     u32 receivefrom;
-
     MESSAGEQUEUE queue;
-
 } PROCESS;
 
 
@@ -87,13 +96,13 @@ typedef struct s_task {
 
 #define QUEUESIZE  128
 
-public int sys_get_ticks();
+//int sys_get_ticks();
 
-public void sys_call();
+void sys_call();
 
-public int get_ticks();
+int get_ticks();
 
-public void schedule();
+void schedule();
 
 void init_queue();
 

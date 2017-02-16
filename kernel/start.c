@@ -7,7 +7,7 @@
 
 
 //prepare gdtr, idtr, idt, should be called very early
-public void cstart() {
+void cstart() {
 	disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 	         "-----\"cstart\" begins-----\n");
 	memcpy(&gdt, (void*)(*((u32*)(&gdt_ptr[2]))), *((u16*)(&gdt_ptr[0])) + 1);

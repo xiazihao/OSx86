@@ -3,11 +3,11 @@
 #include "global.h"
 #include "proto.h"
 
-public u32 seg2phys(u16 seg);
+u32 seg2phys(u16 seg);
 
-private void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege);
+static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege);
 
-private void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribute);
+static void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribute);
 
 void divide_error();
 
@@ -73,7 +73,7 @@ void hwint14();
 
 void hwint15();
 
-public void init_prot() {
+void init_prot() {
     init_8259A();
     init_idt_desc(INT_VECTOR_DIVIDE, DA_386IGate, divide_error, PRIVILEGE_KRNL);
 
@@ -159,7 +159,7 @@ public void init_prot() {
 
 }
 
-public void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
+void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
     int i;
     int text_color = 0x74;
     char *err_msg[] = {"#DE Divide Error",
@@ -206,7 +206,7 @@ public void exception_handler(int vec_no, int err_code, int eip, int cs, int efl
     }
 }
 
-private void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege) {
+static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege) {
     GATE *p_gate = &idt[vector];
     u32 base = (u32) handler;
     p_gate->offset_low = base & 0xffff;
@@ -216,7 +216,7 @@ private void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handl
     p_gate->attr = desc_type | (privilege << 5);
 }
 
-private void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribute) {
+static void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribute) {
     p_desc->limit_low = limit & 0xffff;
     p_desc->base_low = base & 0xffff;
     p_desc->base_mid = (base >> 16) & 0xff;
@@ -226,7 +226,7 @@ private void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attrib
 
 }
 
-public u32 seg2phys(u16 seg) {
+u32 seg2phys(u16 seg) {
     DESCRIPTOR *p_dest = &gdt[seg >> 3];
     return p_dest->base_high << 24 | p_dest->base_mid << 16 | p_dest->base_low;
 }
