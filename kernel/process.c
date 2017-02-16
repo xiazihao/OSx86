@@ -139,7 +139,7 @@ int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message
     }
     // no message in quequ
     assert(process->queue.count == 0);
-//    schedule();
+    schedule();
     return 1;
 }
 
@@ -173,7 +173,7 @@ static u32 getPid(PROCESS *process) {
 void testA() {
     while (1) {
         printf("A:%d  ", get_ticks());
-        wait(10);
+        wait(1000);
 //        if (wait(100)) {
 //            printf("wait error");
 //            while (TRUE);
@@ -185,13 +185,6 @@ void testB() {
     while (1) {
         printf("B");
         get_ticks();
-//        get_ticks();
-//        printf("B: %d ", get_ticks());
-        wait(10);
-//        milli_delay(1000);
-//        if (wait(100)) {
-//            printf("wait error");
-//            while (TRUE);
-//        }
+        wait(5000);
     }
 }

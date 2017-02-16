@@ -94,9 +94,11 @@ void systask() {
                 break;
             }
             if (last > 0) {
-                message.msg1.m1i1 = 0;
-                sendmessage(0, queue[1].sender, &message);
-                down();
+                if (ticks > queue[1].ticks) {
+                    message.msg1.m1i1 = 0;
+                    sendmessage(0, queue[1].sender, &message);
+                    down();
+                }
             }
 
         }
