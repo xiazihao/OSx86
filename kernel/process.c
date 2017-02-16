@@ -22,7 +22,7 @@ static MESSAGECHAIN *getQueuePosition();
 
 static MESSAGECHAIN *getQueuePosition() {
     for (int i = 0; i < QUEUESIZE; ++i) {
-        if (!messageQueue[i].active) {
+        if (messageQueue[i].active == FALSE) {
             return &messageQueue[i];
         }
     }
@@ -34,22 +34,17 @@ static MESSAGECHAIN *getQueuePosition() {
 //}
 
 void schedule() {
-    if (p_proc_ready->ticks > 0 && p_proc_ready->status == RUNNABLE) {
+    if (p_proc_ready->ticks > 0) {
         return;
     }
     if (p_proc_ready->ticks <= 0) {
         p_proc_ready->ticks = p_proc_ready->priority;
     }
-    do {
-        p_proc_ready++;
-        if (p_proc_ready >= process_table + NR_TASKS + NR_PROCS) {
-            p_proc_ready = process_table;
-            assert(p_proc_ready[NR_TASKS + NR_PROCS - 1].status == RUNNABLE);//IDLE task should be always RUNNABLE
-        }
-        if (p_proc_ready->status == RUNNABLE) {
-            break;
-        }
-    } while (TRUE);
+    p_proc_ready++;
+    if (p_proc_ready >= process_table + NR_TASKS + NR_PROCS) {
+        p_proc_ready = process_table;
+        assert(p_proc_ready[NR_TASKS + NR_PROCS - 1].status == RUNNABLE);//IDLE task should be always RUNNABLE
+    }
 }
 
 void init_queue() {
@@ -74,6 +69,7 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             if (receiver->queue.start == NULL) {
                 return 2;//get queque faild
             }
+            assert(receiver->queue.start != NULL);
             receiver->queue.last = receiver->queue.start;
             receiver->queue.count++;
             assert(receiver->queue.count == 1);
@@ -90,6 +86,7 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             physicCopy(temp, (void *) getLinearAddr(sender, message), sizeof(MESSAGE));
             temp->next = receiver->queue.start;
             temp->prev = NULL;
+            temp->message.sender = sender->pid;
             temp->active = TRUE;
             receiver->queue.start->prev = temp;
             receiver->queue.start = temp;
@@ -107,6 +104,7 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
         assert(receiver->queue.start != NULL);
         assert(receiver->queue.last != NULL);
         assert(receiver->queue.count != NULL);
+//        schedule();
         return 0;//ok
     }
     return 1;//dest is not allowed receive
@@ -140,9 +138,8 @@ int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message
         return 0;//get queue
     }
     // no message in quequ
-//    process->status = RECEVING;
     assert(process->queue.count == 0);
-    schedule();
+//    schedule();
     return 1;
 }
 
@@ -162,33 +159,39 @@ static int physicCopy(void *dest, void *src, int size) {
     }
 }
 
-static int physicSet(void *dst, u8 value, int size) {
-    char *p_d = (char *) dst;
-    for (int i = 0; i < size; ++i) {
-        *p_d++ = value;
-    }
-}
+//static int physicSet(void *dst, u8 value, int size) {
+//    char *p_d = (char *) dst;
+//    for (int i = 0; i < size; ++i) {
+//        *p_d++ = value;
+//    }
+//}
 
 static u32 getPid(PROCESS *process) {
     return process->pid;
 }
 
 void testA() {
-    MESSAGE message;
-    memset(&message, 0, sizeof(MESSAGE));
-    int result;
-    int count = 0;
     while (1) {
         printf("A:%d  ", get_ticks());
-//        milli_delay(1000);
-        wait(100);
-
+        wait(10);
+//        if (wait(100)) {
+//            printf("wait error");
+//            while (TRUE);
+//        }
     }
 }
 
 void testB() {
     while (1) {
-//        printf("B: %d", get_ticks());
-        milli_delay(1000);
+        printf("B");
+        get_ticks();
+//        get_ticks();
+//        printf("B: %d ", get_ticks());
+        wait(10);
+//        milli_delay(1000);
+//        if (wait(100)) {
+//            printf("wait error");
+//            while (TRUE);
+//        }
     }
 }

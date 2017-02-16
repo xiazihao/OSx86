@@ -7,33 +7,96 @@
 //
 // Created by xiazihao on 2/11/17.
 //
-#define SYSTASKPID 1
+static int up();
 
-struct s_waitQueue {
-    int active;
+#define SYSTASKPID 1
+typedef struct s_waitQueue {
     int ticks;
     int sender;
-};
+} WaitQueue;
+#define SIZE 16
+int last;
+WaitQueue queue[SIZE];
+
+static int insert(int ticks, unsigned int sender) {
+    if (last + 1 < SIZE) {
+        last++;
+        queue[last].ticks = ticks;
+        queue[last].sender = sender;
+        up();
+        return 0;
+    }
+    return 1;//1:not enough space
+}
+
+static int up() {
+    int position = last;
+    int parrent = position / 2;
+    WaitQueue swich;
+    while (position > 1) {
+        if (queue[position].ticks < queue[parrent].ticks) {
+            swich.ticks = queue[position].ticks;
+            swich.sender = queue[position].sender;
+            queue[position].ticks = queue[parrent].ticks;
+            queue[position].sender = queue[parrent].sender;
+            queue[parrent].ticks = swich.ticks;
+            queue[parrent].sender = swich.sender;
+        }
+        position = parrent;
+        parrent = parrent / 2;
+    }
+}
+
+static WaitQueue pop() {
+
+}
+
+static int down() {
+    if (last < 1) {
+        return 0;
+    }
+    int position = 1;
+    int son = position * 2;
+    while (son <= last) {
+        if (son == last) {
+            memcpy(&queue[position], &queue[son], sizeof(WaitQueue));
+//            queue[position].ticks = queue[son].ticks;
+//            queue[position].sender = queue[son].sender;
+            position = son;
+            son = position * 2;
+        } else if (queue[son].ticks < queue[son + 1].ticks) {
+            memcpy(&queue[position], &queue[son], sizeof(WaitQueue));
+//            queue[position].ticks = queue[son].ticks;
+//            queue[position].sender = queue[son].sender;
+            position = son;
+            son = position * 2;
+        } else {
+            memcpy(&queue[position], &queue[son + 1], sizeof(WaitQueue));
+//            queue[position].ticks = queue[son + 1].ticks;
+//            queue[position].sender = queue[son + 1].sender;
+            position = son + 1;
+            son = position * 2;
+        }
+    }
+    last--;
+    return 1;
+}
 
 void systask() {
     MESSAGE message;
-    struct s_waitQueue waitQueue;
     memset(&message, 0, sizeof(MESSAGE));
     u32 side;
+    last = 0;
     while (1) {
-//        while (receivemessage(0, ANY, &message));//return 0: receive
+        memset(&message, 0, sizeof(MESSAGE));
         while (TRUE) { // systask working loop
             if (!receivemessage(0, ANY, &message)) {
                 break;
             }
-
-            if (waitQueue.active == TRUE) {
-//                printf("check wait");
-                if (waitQueue.ticks < ticks) {
-                    sendmessage(0, waitQueue.sender, &message);
-                    printf("send wait");
-                    waitQueue.active = FALSE;
-                }
+            if (last > 0) {
+                message.msg1.m1i1 = 0;
+                sendmessage(0, queue[1].sender, &message);
+                down();
             }
 
         }
@@ -41,14 +104,15 @@ void systask() {
         switch (message.type) {
             case SYSGETTICKS:
                 message.msg1.m1i1 = ticks;
+//                printf("tick: %d", side);
                 sendmessage(0, side, &message);
                 break;
             case SYSWAIT:
-                waitQueue.sender = side;
-//                assert(message.msg1.m1i1 == 100);
-                waitQueue.ticks = ticks + (message.msg1.m1i1 / (1000 / HZ));
-                waitQueue.active = TRUE;
-                printf("get wait");
+                if (insert(ticks + (message.msg1.m1i1 / (1000 / HZ)), side)) { // return not 1 enter
+                    message.msg1.m1i1 = 1;
+                    sendmessage(0, side, &message);
+                }
+//                printf("sys: %d", side);
                 break;
             default:
                 break;
@@ -65,9 +129,12 @@ int wait(int millsec) {
     message.msg1.m1i1 = millsec;
     if (!sendmessage(0, SYSTASKPID, &message)) {
         while (receivemessage(0, ANY, &message));
+        if (message.msg1.m1i1) {
+            return 1;
+        }
         return 0;
     }
-    return 1;
+    return 1; // send faild
 }
 
 int get_ticks() {

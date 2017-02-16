@@ -133,14 +133,3 @@ int sys_write(PROCESS *p_process, char *buf, int len) {
     tty_write(&tty_table[p_process->nrtty], buf, len);
     return 0;
 }
-
-//int sys_printx(PROCESS *p_process, int _unused1, int _unused2, char *s) {
-//    const char *p;
-//    char ch;
-//    char reenter_err[] = "? k_reenter is incorrect for unkown reason";
-//    reenter_err[0] = MAG_CH_PANIC;
-//    if (k_reenter == 0) {
-//
-//    }
-//
-//}

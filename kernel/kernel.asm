@@ -15,25 +15,7 @@ EXTERN disp_str
 EXTERN k_reenter
 EXTERN clock_handler
 EXTERN irq_table
-%macro hwint_master 	1
-	call save
-	in al,INT_M_CTLMASK
-	or al,1 <<%1
-	out INT_M_CTLMASK,al
 
-	mov ax,EOI
-	out INT_M_CTL,al
-
-	sti
-	push %1
-	call [irq_table + 4 * %1]
-	add esp,4
-	cli
-	in al,INT_M_CTLMASK
-	and al,~(1<<%1)
-	out INT_M_CTLMASK,al
-	ret
-%endmacro
 section .bss
 StackSpace resb 2*1024
 StackTop:
@@ -143,7 +125,25 @@ save:
 	push restart_reenter
 	jmp [esi + RETADR - P_STACKBASE]
 
+%macro hwint_master 	1
+	call save
+	in al,INT_M_CTLMASK
+	or al,1 <<%1
+	out INT_M_CTLMASK,al
 
+	mov ax,EOI
+	out INT_M_CTL,al
+
+	sti
+	push %1
+	call [irq_table + 4 * %1]
+	add esp,4
+	cli
+	in al,INT_M_CTLMASK
+	and al,~(1<<%1)
+	out INT_M_CTLMASK,al
+	ret
+%endmacro
 hwint00:
 	hwint_master 	0
 
@@ -168,29 +168,50 @@ hwint06:
 hwint07:
 	hwint_master 	7
 
+%macro hwint_slave 	1
+	call save
+	in al,INT_M_CTLMASK
+	or al,1 <<(%1 - 8)
+	out INT_S_CTLMASK,al
+
+	mov ax,EOI
+	out INT_M_CTL,al
+	nop
+	out INT_S_CTL,al
+
+	sti
+	push %1
+	call [irq_table + 4 * %1]
+	add esp,4
+	cli
+	in al,INT_M_CTLMASK
+	and al,~(1<<(%1 - 8))
+	out INT_S_CTLMASK,al
+	ret
+%endmacro
 hwint08:
-	hwint_master 	8
+	hwint_slave 	8
 
 hwint09:
-	hwint_master 	9
+	hwint_slave 	9
 
 hwint10:
-	hwint_master 	10
+	hwint_slave 	10
 
 hwint11:
-	hwint_master 	11
+	hwint_slave 	11
 
 hwint12:
-	hwint_master 	12
+	hwint_slave 	12
 
 hwint13:
-	hwint_master 	13
+	hwint_slave 	13
 
 hwint14:
-	hwint_master 	14
+	hwint_slave 	14
 
 hwint15:
-	hwint_master 	15
+	hwint_slave 	15
 	
 divide_error:
 push 0xFFFFFFFF
