@@ -1,5 +1,7 @@
 #define GLOBAL_VARIABLES_HERE
 
+#include <fs.h>
+#include <systask.h>
 #include "global.h"
 #include "proto.h"
 
@@ -30,12 +32,25 @@ u8 idt_ptr[6];    /* 0~15:Limit  16~47:Base */
 Gate idt[IDT_SIZE];
 Tss tss;
 u32 k_reenter;
-Task task_table[NR_TASKS] = {{task_tty, STACK_SIZE_TTY, "keyboard"},
+
+DevDriverMap dd_map[] = {
+        {-1}, // no
+        {-1}, // preserve for floppy
+        {-1},   //preserve for cdrom
+        {PID_HD},//
+        {PID_TTY},
+        {-1}//preserve for scsi disk driver
+
+};
+
+Task task_table[NR_TASKS] = {{task_tty, STACK_SIZE_TTY, "tty"},
                              {systask,  STACK_SYSTASK,  "system task"},
                              {task_hd,  STACK_HD,       "hd"}};
-Task user_proc_table[NR_PROCS] = {{testA, STACK_SIZE_TESTA, "testA"},
-                                  {testB, STACK_SIZE_TESTB, "testB"},
-                                  {IDLE,  STACK_IDLE,       "idle"}};
+Task user_proc_table[NR_PROCS] = {
+        {testA, STACK_SIZE_TESTA, "testA"},
+        {testB, STACK_SIZE_TESTB, "testB"},
+        {IDLE,  STACK_IDLE,       "idle"}
+};
 irq_handler irq_table[NR_IRQ];
 system_call sys_call_table[NR_SYS_CALL] = {sys_sendmessage, sys_receivemessage, sys_write};
 int ticks;

@@ -16,7 +16,7 @@ typedef struct {
     u8 device;
     u8 command;
 } HDCMD;
-#define ATA_IDENTIFY		0xEC
+#define ATA_IDENTIFY        0xEC
 
 #define DEV_OPEN    1
 
@@ -37,4 +37,12 @@ typedef struct {
 #define REG_DEVICECONTROL   0x3F6
 #define REG_ALTSTATUS   REG_DEVICECONTROL
 
+
+#define MAX_DRIVERS     2
+#define NR_PART_PER_DRIVE   4
+#define NR_SUB_PER_PART     16
+#define NR_SUB_PER_DRIVE    (NR_PART_PER_DRIVE + NR_SUB_PER_PART)
+#define NR_PRIM_PER_DRIVE   (NR_PART_PER_DRIVE + 1)
+#define MAX_PRIM    (MAX_DRIVES * NR_PRIM_PER_DRIVE - 1)
+#define MAX_SUBPARTITIONS   (NR_SUB_PER_DRIVE * MAX_DRIVES)
 #endif //CHP6_HD_H

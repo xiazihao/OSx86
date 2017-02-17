@@ -192,8 +192,8 @@ void testA() {
     Message msg;
     msg.type = DEV_OPEN;
     while (1) {
-        wait(1000);
-        sendmessage(0, HDPID, &msg);
+        wait(10000);
+//        sendmessage(0, PID_HD, &msg);
 //        printf("A:%d  ", getTicks());
     }
 }

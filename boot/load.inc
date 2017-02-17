@@ -11,3 +11,7 @@ KernelEntryPointPhyAddr	equ	030400h
 
 PageDirBase		equ	200000h	; 页目录开始地址:		2M
 PageTblBase		equ	201000h	; 页表开始地址:			2M + 4K
+
+MemInfoSize 	equ 	1000h
+MemInfoBuf 		equ 	1010h
+MemIn 	equ BaseOfLoaderPhyAddr + MemInfoBuf

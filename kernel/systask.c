@@ -82,7 +82,28 @@ static int down() {
     return 1;
 }
 
+typedef struct {
+    u32 baseLow;
+    u32 baseHigh;
+    u32 lengthLow;
+    u32 lengthHigh;
+    u32 type;
+} ARDS;
+
+int getPhysicalSize() {
+    int *num = 0x91000;
+    ARDS *ards = 0x91010;
+    printf("number: %d \n", *num);
+    for (int i = 0; i < *num; ++i) {
+        printf("baselow: %x,basehight: %x, lengthlow: %x, lengthhigh: %x, type: %d\n", ards->baseLow, ards->baseHigh,
+               ards->lengthLow, ards->lengthHigh, ards->type);
+        ards++;
+    }
+
+}
+
 void systask() {
+    getPhysicalSize();
     Message message;
     memset(&message, 0, sizeof(Message));
     u32 side;
@@ -130,8 +151,8 @@ int wait(int millsec) {
     memset(&message, 0, sizeof(Message));
     message.type = SYSWAIT;
     message.msg1.m1i1 = millsec;
-    if (!sendmessage(RECEIVE, SYSTASKPID, &message)) {
-        while (receivemessage(0, SYSTASKPID, &message));
+    if (!sendmessage(RECEIVE, PID_SYSTASK, &message)) {
+        while (receivemessage(0, PID_SYSTASK, &message));
         if (message.msg1.m1i1) {
             return 1;
         }
@@ -145,8 +166,8 @@ int getTicks() {
     receivemessage(INFORM, ANY, NULL);
     memset(&message, 0, sizeof(Message));
     message.type = SYSGETTICKS;
-    if (!sendmessage(RECEIVE, SYSTASKPID, &message)) {
-        while (receivemessage(RECEIVE, SYSTASKPID, &message));
+    if (!sendmessage(RECEIVE, PID_SYSTASK, &message)) {
+        while (receivemessage(RECEIVE, PID_SYSTASK, &message));
         return message.msg1.m1i1;
     }
     return 0;

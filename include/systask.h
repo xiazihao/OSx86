@@ -7,8 +7,9 @@
 #define SYSGETTICKS 1
 #define SYSWAIT 2
 
-#define SYSTASKPID  1
-#define HDPID       2
+#define PID_TTY         0
+#define PID_SYSTASK     1
+#define PID_HD          2
 
 int wait(int millsec);
 

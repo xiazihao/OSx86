@@ -8,7 +8,9 @@
 #include <hd.h>
 #include <systask.h>
 
-#define DEVICE_REG(lba, drv, lbaHigh) ((lba << 6) | (drv <<4) | (lbaHigh &0xf) | 0xa0)
+#define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) |		\
+					      ((drv) << 4) |		\
+					      (lba_highest & 0xF) | 0xA0)
 
 #define SECTOR_SIZE     512
 static u8 hd_status;
@@ -38,9 +40,8 @@ static void init_hd() {
 
 static void hd_identify(int drive) {
     HDCMD cmd;
-    cmd.device = DEVICE_REG(0, drive, 0);
+    cmd.device = MAKE_DEVICE_REG(0, drive, 0);
     cmd.command = ATA_IDENTIFY;
-//    receivemessage()
     hd_cmd_out(&cmd);
     interrupt_wait();
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
@@ -97,7 +98,7 @@ static void hd_cmd_out(HDCMD *hdcmd) {
     out_byte(REG_LBAHIGH, hdcmd->lba_high);
     out_byte(REG_DEVICE, hdcmd->device);
     //
-    out_byte(REG_CMD, hdcmd->device);
+    out_byte(REG_CMD, hdcmd->command);
 
 }
 
@@ -114,6 +115,7 @@ static int waitfor(int mask, int value, int timeout) {
 static void interrupt_wait() {
     receivemessage(INFORM, ANY, NULL);
     while (receivemessage(INT, ANY, NULL));
+    printf("get");
 }
 
 void task_hd() {
@@ -126,7 +128,7 @@ void task_hd() {
             case DEV_OPEN:
 //                printf("get open");
                 hd_identify(0);
-                while (1);
+//                while (1);
                 break;
         }
     }
@@ -134,6 +136,6 @@ void task_hd() {
 
 void hd_handler(int irq) {
     hd_status = in_byte(REG_STATUS);
-    informInterrupt(HDPID);
+    informInterrupt(PID_HD);
 //    while (1);
 }

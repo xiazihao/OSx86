@@ -50,7 +50,8 @@ LABEL_START:			; <--- 从这里开始 *************
 
 	; 得到内存数
 	mov	ebx, 0			; ebx = 后续值, 开始时需为 0
-	mov	di, _MemChkBuf		; es:di 指向一个地址范围描述符结构（Address Range Descriptor Structure）
+	; mov	di, _MemChkBuf		; es:di 指向一个地址范围描述符结构（Address Range Descriptor Structure）
+	mov di,MemInfoBuf
 .MemChkLoop:
 	mov	eax, 0E820h		; eax = 0000E820h
 	mov	ecx, 20			; ecx = 地址范围描述符结构的大小
@@ -65,7 +66,8 @@ LABEL_START:			; <--- 从这里开始 *************
 .MemChkFail:
 	mov	dword [_dwMCRNumber], 0
 .MemChkOK:
-
+	mov eax,dword[_dwMCRNumber]
+	mov dword[MemInfoSize],eax
 	; 下面在 A 盘的根目录寻找 KERNEL.BIN
 	mov	word [wSectorNo], SectorNoOfRootDirectory	
 	xor	ah, ah	; ┓
@@ -358,7 +360,7 @@ LABEL_PM_START:
 	add	esp, 4
 
 	call	DispMemInfo
-	call	SetupPaging
+	; call	SetupPaging
 
 	; mov	ah, 0Fh				; 0000: 黑底    1111: 白字
 	; mov	al, 'P'
@@ -618,7 +620,7 @@ DispMemInfo:
 	push	edi
 	push	ecx
 
-	mov	esi, MemChkBuf
+	mov	esi, MemIn
 	mov	ecx, [dwMCRNumber]	;for(int i=0;i<[MCRNumber];i++) // 每次得到一个ARDS(Address Range Descriptor Structure)结构
 .loop:					;{
 	mov	edx, 5			;	for(int j=0;j<5;j++)	// 每次得到一个ARDS中的成员，共5个成员
