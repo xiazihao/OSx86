@@ -9,7 +9,7 @@
 //
 static int up();
 
-#define SYSTASKPID 1
+
 typedef struct s_waitQueue {
     int ticks;
     int sender;
@@ -83,12 +83,12 @@ static int down() {
 }
 
 void systask() {
-    MESSAGE message;
-    memset(&message, 0, sizeof(MESSAGE));
+    Message message;
+    memset(&message, 0, sizeof(Message));
     u32 side;
     last = 0;
     while (1) {
-        memset(&message, 0, sizeof(MESSAGE));
+        memset(&message, 0, sizeof(Message));
         while (TRUE) { // systask working loop
             if (!receivemessage(0, ANY, &message)) {
                 break;
@@ -125,12 +125,13 @@ void systask() {
 }
 
 int wait(int millsec) {
-    MESSAGE message;
-    memset(&message, 0, sizeof(MESSAGE));
+    Message message;
+    receivemessage(INFORM, ANY, NULL);
+    memset(&message, 0, sizeof(Message));
     message.type = SYSWAIT;
     message.msg1.m1i1 = millsec;
-    if (!sendmessage(0, SYSTASKPID, &message)) {
-        while (receivemessage(0, ANY, &message));
+    if (!sendmessage(RECEIVE, SYSTASKPID, &message)) {
+        while (receivemessage(0, SYSTASKPID, &message));
         if (message.msg1.m1i1) {
             return 1;
         }
@@ -139,12 +140,13 @@ int wait(int millsec) {
     return 1; // send faild
 }
 
-int get_ticks() {
-    MESSAGE message;
-    memset(&message, 0, sizeof(MESSAGE));
+int getTicks() {
+    Message message;
+    receivemessage(INFORM, ANY, NULL);
+    memset(&message, 0, sizeof(Message));
     message.type = SYSGETTICKS;
-    if (!sendmessage(0, SYSTASKPID, &message)) {
-        while (receivemessage(0, ANY, &message));
+    if (!sendmessage(RECEIVE, SYSTASKPID, &message)) {
+        while (receivemessage(RECEIVE, SYSTASKPID, &message));
         return message.msg1.m1i1;
     }
     return 0;

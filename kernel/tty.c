@@ -18,15 +18,15 @@ static void tty_do_write(TTY *p_tty);
 
 static void tty_do_read(TTY *p_tty);
 
-int is_current_console(CONSOLE *p_console);
+int is_current_console(Console *p_console);
 
 void task_tty() {
     TTY *p_tty;
-    init_keyboard();
+    initKeyboard();
     for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
         init_tty(p_tty);
     }
-    select_console(0);
+    selectConsole(0);
     while (1) {
         for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
             tty_do_read(p_tty);
@@ -35,7 +35,7 @@ void task_tty() {
     }
 }
 
-void in_process(TTY *p_tty, u32 key) {
+void inProcess(TTY *p_tty, u32 key) {
 
     if (!(key & FLAG_EXT)) { // the key is not extension
         put_key(p_tty, key);
@@ -50,13 +50,13 @@ void in_process(TTY *p_tty, u32 key) {
                 break;
             case UP:
                 if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-                    scroll_screen(p_tty->p_console, SCR_DN);
+                    scrollScreen(p_tty->p_console, SCR_DN);
                 }
 
                 break;
             case DOWN:
                 if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-                    scroll_screen(p_tty->p_console, SCR_UP);
+                    scrollScreen(p_tty->p_console, SCR_UP);
                 }
                 break;
             case F1:
@@ -72,7 +72,7 @@ void in_process(TTY *p_tty, u32 key) {
             case F11:
             case F12:
                 if ((key & FLAG_CTRL_L) || (key & FLAG_CTRL_R)) {
-                    select_console(raw_code - F1);
+                    selectConsole(raw_code - F1);
                 }
                 break;
             default:
@@ -84,16 +84,16 @@ void in_process(TTY *p_tty, u32 key) {
 static void init_tty(TTY *p_tty) {
     p_tty->inbuf_count = 0;
     p_tty->p_inbuf_head = p_tty->p_inbuf_tail = p_tty->in_buf;
-    init_screen(p_tty);
+    initScreen(p_tty);
 }
 
-int is_current_console(CONSOLE *p_console) {
+int is_current_console(Console *p_console) {
     return (p_console == &console_table[nr_current_console]);
 }
 
 static void tty_do_read(TTY *p_tty) {
     if (is_current_console(p_tty->p_console)) {
-        keyboard_read(p_tty);
+        keyboardRead(p_tty);
     }
 }
 
@@ -105,7 +105,7 @@ static void tty_do_write(TTY *p_tty) {
             p_tty->p_inbuf_tail = p_tty->in_buf;
         }
         p_tty->inbuf_count--;
-        out_char(p_tty->p_console, ch);
+        outChar(p_tty->p_console, ch);
     }
 }
 
@@ -120,16 +120,16 @@ static void put_key(TTY *p_tty, u32 key) {
     }
 }
 
-void tty_write(TTY *p_tty, char *buf, int len) {
+void ttyWrite(TTY *p_tty, char *buf, int len) {
     char *p = buf;
     int i = len;
     while (i) {
-        out_char(p_tty->p_console, *p++);
+        outChar(p_tty->p_console, *p++);
         i--;
     }
 }
 
-int sys_write(PROCESS *p_process, char *buf, int len) {
-    tty_write(&tty_table[p_process->nrtty], buf, len);
+int sys_write(Process *p_process, char *buf, int len) {
+    ttyWrite(&tty_table[p_process->nrtty], buf, len);
     return 0;
 }

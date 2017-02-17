@@ -7,7 +7,7 @@ u32 seg2phys(u16 seg);
 
 static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege);
 
-static void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribute);
+static void init_descriptor(Descriptor *p_desc, u32 base, u32 limit, u16 attribute);
 
 void divide_error();
 
@@ -73,7 +73,7 @@ void hwint14();
 
 void hwint15();
 
-void init_prot() {
+void initProtect() {
     init_8259A();
     init_idt_desc(INT_VECTOR_DIVIDE, DA_386IGate, divide_error, PRIVILEGE_KRNL);
 
@@ -147,11 +147,11 @@ void init_prot() {
     tss.iobase = sizeof(tss);
 
     int i;
-    PROCESS *p_proc = process_table;
+    Process *p_proc = process_table;
     u16 selector_ldt = INDEX_LDT_FIRST << 3;
     for (i = 0; i < NR_TASKS + NR_PROCS; i++) {
         init_descriptor(&gdt[selector_ldt >> 3], vir2phys(seg2phys(SELECTOR_KERNEL_DS), process_table[i].ldts),
-                        LDT_SIZE * sizeof(DESCRIPTOR) - 1, DA_LDT);
+                        LDT_SIZE * sizeof(Descriptor) - 1, DA_LDT);
         p_proc++;
         selector_ldt += 1 << 3;
     }
@@ -172,7 +172,7 @@ void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
                        "#NM Device Not Available (No Math Coprocessor)",
                        "#DF Double Fault",
                        "    Coprocessor Segment Overrun (reserved)",
-                       "#TS Invalid TSS",
+                       "#TS Invalid Tss",
                        "#NP Segment Not Present",
                        "#SS Stack-Segment Fault",
                        "#GP General Protection",
@@ -207,7 +207,7 @@ void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
 }
 
 static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege) {
-    GATE *p_gate = &idt[vector];
+    Gate *p_gate = &idt[vector];
     u32 base = (u32) handler;
     p_gate->offset_low = base & 0xffff;
     p_gate->offset_high = (base >> 16) & 0xffff;
@@ -216,7 +216,7 @@ static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handle
     p_gate->attr = desc_type | (privilege << 5);
 }
 
-static void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribute) {
+static void init_descriptor(Descriptor *p_desc, u32 base, u32 limit, u16 attribute) {
     p_desc->limit_low = limit & 0xffff;
     p_desc->base_low = base & 0xffff;
     p_desc->base_mid = (base >> 16) & 0xff;
@@ -227,6 +227,6 @@ static void init_descriptor(DESCRIPTOR *p_desc, u32 base, u32 limit, u16 attribu
 }
 
 u32 seg2phys(u16 seg) {
-    DESCRIPTOR *p_dest = &gdt[seg >> 3];
+    Descriptor *p_dest = &gdt[seg >> 3];
     return p_dest->base_high << 24 | p_dest->base_mid << 16 | p_dest->base_low;
 }

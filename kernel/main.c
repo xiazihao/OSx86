@@ -9,8 +9,8 @@
 
 void kernel_main() {
     disp_str("-----\"kernel_main\" begins-----\n");
-    PROCESS *p_proc = process_table;
-    TASK *p_task = task_table;
+    Process *p_proc = process_table;
+    Task *p_task = task_table;
     char *p_task_stack = task_stack + STACK_SIZE_TOTAL;
     u16 selector_ldt = SELECTOR_LDT_FIRST;
     u8 privilege;
@@ -33,9 +33,9 @@ void kernel_main() {
         strcpy(p_proc->name, p_task->name);
         p_proc->pid = i;
         p_proc->ldt_sel = selector_ldt;
-        memcpy(&p_proc->ldts[0], &gdt[SELECTOR_KERNEL_CS >> 3], sizeof(DESCRIPTOR));
+        memcpy(&p_proc->ldts[0], &gdt[SELECTOR_KERNEL_CS >> 3], sizeof(Descriptor));
         p_proc->ldts[0].attr1 = DA_C | privilege << 5;
-        memcpy(&p_proc->ldts[1], &gdt[SELECTOR_KERNEL_DS >> 3], sizeof(DESCRIPTOR));
+        memcpy(&p_proc->ldts[1], &gdt[SELECTOR_KERNEL_DS >> 3], sizeof(Descriptor));
         p_proc->ldts[1].attr1 = DA_DRW | privilege << 5;
 
         p_proc->regs.cs = (0 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
@@ -49,8 +49,9 @@ void kernel_main() {
         p_proc->regs.eflags = eflags;
 
         p_proc->nrtty = 0;
-        p_proc->priority = 5;
+        p_proc->priority = 1;
         p_proc->status = RUNNABLE;
+        p_proc->interrupt = FALSE;
         p_proc->queue.count = 0;
         p_proc->queue.start = NULL;
         p_proc->queue.last = NULL;
@@ -63,8 +64,8 @@ void kernel_main() {
     p_proc_ready = process_table;
     k_reenter = 0;
 
-    init_queue();
-    init_clock();
+    initQueue();
+    initClock();
     ticks = 0;
 
     restart();//last function any sentence after that will not be matched

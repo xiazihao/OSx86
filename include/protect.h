@@ -9,7 +9,7 @@ typedef struct s_descriptor
 	u8	attr1;
 	u8 	limit_high_attr2;
 	u8 	base_high;
-} DESCRIPTOR;
+} Descriptor;
 
 typedef struct s_gate
 {
@@ -18,7 +18,7 @@ typedef struct s_gate
 	u8 	dcount;
 	u8 	attr;
 	u16 offset_high;
-} GATE;
+} Gate;
 
 typedef struct s_tss
 {
@@ -49,7 +49,7 @@ typedef struct s_tss
 	u32 ldt;
 	u16 trap;
 	u16 iobase;
-} TSS;
+} Tss;
 #define	SA_RPL_MASK	0xFFFC
 #define	SA_RPL0		0
 #define	SA_RPL1		1
@@ -128,5 +128,5 @@ typedef struct s_tss
 #define INDEX_LDT_C             0
 #define INDEX_LDT_RW            1
 
-void init_prot();
+void initProtect();
 #endif

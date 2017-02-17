@@ -32,7 +32,7 @@ TSS3_S_SP0	equ	4
 
 ; 以下选择子值必须与 protect.h 中保持一致!!!
 SELECTOR_FLAT_C		equ		0x08	; LOADER 里面已经确定了的.
-SELECTOR_TSS		equ		0x20	; TSS
+SELECTOR_TSS		equ		0x20	; Tss
 SELECTOR_KERNEL_CS	equ		SELECTOR_FLAT_C
 
 GDT_SIZE equ 128

@@ -13,7 +13,7 @@ EXTERN p_proc_ready
 EXTERN kernel_main
 EXTERN disp_str
 EXTERN k_reenter
-EXTERN clock_handler
+EXTERN clockHandler
 EXTERN irq_table
 
 section .bss
@@ -83,7 +83,7 @@ restart:;load process
 	mov esp,[p_proc_ready];esp is the start of process block
 	lldt [esp + P_LDT_SEL];P_LDT_SEL: offset from process block
 	lea eax,[esp + P_STACKTOP]
-	mov dword[tss + TSS3_S_SP0],eax; tss.esp0 equ the end of PROCESS.STACKFRAME, so that when 
+	mov dword[tss + TSS3_S_SP0],eax; tss.esp0 equ the end of Process.StackFrame, so that when
 restart_reenter:					; get into interrupt, the esp will start here and save the register
     dec dword[k_reenter]			; imiditely. ss esp eflags cs eip will push here
 	pop gs
@@ -91,7 +91,7 @@ restart_reenter:					; get into interrupt, the esp will start here and save the 
 	pop es
 	pop ds
 	popad
-	add esp,4 ;now esp is PROCESS.STACKFRAM.eip
+	add esp,4 ;now esp is Process.STACKFRAM.eip
 	iretd
 
 
@@ -170,7 +170,7 @@ hwint07:
 
 %macro hwint_slave 	1
 	call save
-	in al,INT_M_CTLMASK
+	in al,INT_S_CTLMASK
 	or al,1 <<(%1 - 8)
 	out INT_S_CTLMASK,al
 
@@ -307,7 +307,7 @@ sys_call:
 	call [sys_call_table + 4*eax]
 	add esp,4*4
 	pop esi
-	mov [esi + EAXREG - P_STACKBASE],eax;put return value into STACKFRAME
+	mov [esi + EAXREG - P_STACKBASE],eax;put return value into StackFrame
 	cli; when restart close interrupt and IF will set automaticlly when load elflags
 	ret
 

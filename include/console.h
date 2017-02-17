@@ -13,7 +13,7 @@ typedef struct s_console {
     unsigned int original_addr;//if initial and won't be changed
     unsigned int v_mem_limit;
     unsigned int cursor;//index of cursor, start from address of video section
-} CONSOLE;
+} Console;
 //typedef enum e_scrooll_direction {
 //    SCROLLDOWN, SCROLLUP
 //} ScrollDirection;
@@ -24,12 +24,12 @@ typedef struct s_console {
 #define SCR_UP    1    /* scroll forward */
 #define SCR_DN    -1    /* scroll backward */
 
-void init_screen(TTY *p_tty);
+void initScreen(TTY *p_tty);
 
-void out_char(CONSOLE *p_console, char ch);
+void outChar(Console *p_console, char ch);
 
-void select_console(int nr_console);
+void selectConsole(int nr_console);
 
-void scroll_screen(CONSOLE *p_console, int direction);
+void scrollScreen(Console *p_console, int direction);
 
 #endif //CHP6_CONSOLE_H

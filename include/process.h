@@ -23,7 +23,7 @@ typedef struct s_stackframe {
     u32 eflags;
     u32 esp;
     u32 ss;
-} STACKFRAME;
+} StackFrame;
 
 
 struct msg1 {
@@ -40,29 +40,29 @@ typedef struct s_message {
     union {
         struct msg1 msg1;
     };
-} MESSAGE;
+} Message;
 
-typedef struct s_messageQueueElement MESSAGECHAIN;
+typedef struct s_messageQueueElement MessageChain;
 
 typedef struct s_messageQueueElement {
-    MESSAGE message;
-    MESSAGECHAIN *next;
-    MESSAGECHAIN *prev;
+    Message message;
+    MessageChain *next;
+    MessageChain *prev;
     int active;
-} MESSAGECHAIN;
+} MessageChain;
 
 
 typedef struct {
-    MESSAGECHAIN *start;
-    MESSAGECHAIN *last;
+    MessageChain *start;
+    MessageChain *last;
     int count;
-} MESSAGEQUEUE;
+} MessageQueue;
 
 
 typedef struct s_proc {
-    STACKFRAME regs; // must be the first memeber of struct
+    StackFrame regs; // must be the first memeber of struct
     u16 ldt_sel;//ldt selector
-    DESCRIPTOR ldts[LDT_SIZE];//0:code seg 1:data seg
+    Descriptor ldts[LDT_SIZE];//0:code seg 1:data seg
     //above is essential and the sequence cannot be changed
     int ticks;
     int priority;
@@ -70,28 +70,34 @@ typedef struct s_proc {
     char name[16];
     int nrtty;//index of tty
     int status;//receving sending runable
+    int interrupt;
     u32 receivefrom;
-    MESSAGEQUEUE queue;
-} PROCESS;
+    MessageQueue queue;
+} Process;
 
 
 typedef struct s_task {
     task_f initial_eip;
     int stacksize;
     char name[32];
-} TASK; // the essential info to create a process
+} Task; // the essential info to create a process
 //recvivefrom
 #define ANY 0xfffffff0
-#define NOTASK (ANY - 0x1)
-
+#define NOTASK (ANY - 0x01)
+#define INTERRUPT (ANY - 0x02)
 //status
 #define RUNNABLE    0
 #define RECEVING    1
 #define SENDING     1<<1
 
+//function
+#define RECEIVE    0x00
+#define INFORM  0x01
+#define INT     0x02
+
 
 #define NR_PROCS    3
-#define NR_TASKS    2
+#define NR_TASKS    3
 
 
 #define QUEUESIZE  128
@@ -100,16 +106,17 @@ typedef struct s_task {
 
 void sys_call();
 
-int get_ticks();
+int informInterrupt(u32 handlerPid);
 
 void schedule();
 
-void init_queue();
+void initQueue();
 
 #define STACK_SIZE_TESTA    0x8000
 #define STACK_SIZE_TESTB    0x8000
 #define STACK_SIZE_TTY      0x8000
 #define STACK_SYSTASK       0x8000
+#define STACK_HD            0x8000
 #define STACK_IDLE          0x8000
-#define STACK_SIZE_TOTAL    STACK_SIZE_TESTA + STACK_SIZE_TESTB + STACK_SIZE_TTY + STACK_SYSTASK + STACK_IDLE
+#define STACK_SIZE_TOTAL    STACK_SIZE_TESTA + STACK_SIZE_TESTB + STACK_SIZE_TTY + STACK_SYSTASK + STACK_IDLE + STACK_HD
 #endif

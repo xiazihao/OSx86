@@ -7,20 +7,19 @@
 #include "proto.h"
 #include "type.h"
 #include "process.h"
+#include "hd.h"
 
-MESSAGECHAIN messageQueue[QUEUESIZE];
+MessageChain messageQueue[QUEUESIZE];
 
-static u32 getPid(PROCESS *process);
-
-static int physicSet(void *dst, u8 value, int size);
+static u32 getPid(Process *process);
 
 static int physicCopy(void *dest, void *src, int size);
 
-static u32 getLinearAddr(PROCESS *process, void *virtualAddr);
+static u32 getLinearAddr(Process *process, void *virtualAddr);
 
-static MESSAGECHAIN *getQueuePosition();
+static MessageChain *getQueuePosition();
 
-static MESSAGECHAIN *getQueuePosition() {
+static MessageChain *getQueuePosition() {
     for (int i = 0; i < QUEUESIZE; ++i) {
         if (messageQueue[i].active == FALSE) {
             return &messageQueue[i];
@@ -29,6 +28,14 @@ static MESSAGECHAIN *getQueuePosition() {
     return NULL;
 }
 
+int informInterrupt(u32 handlerPid) {
+    assert(handlerPid < NR_PROCS + NR_TASKS - 1);
+    Process *process = &process_table[handlerPid];
+//    if (process->receivefrom == INTERRUPT || process->receivefrom == ANY) {
+        process->interrupt = TRUE;
+        p_proc_ready = process;
+//    }
+}
 //public int sys_get_ticks() {
 //    return ticks;
 //}
@@ -47,21 +54,19 @@ void schedule() {
     }
 }
 
-void init_queue() {
+void initQueue() {
     for (int i = 0; i < QUEUESIZE; ++i) {
-        memset(&messageQueue[i], 0, sizeof(MESSAGECHAIN));
-//        messageQueue[i].next = NULL;
-//        messageQueue[i].prev = NULL;
+        memset(&messageQueue[i], 0, sizeof(MessageChain));
     }
 }
 
-int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) {
+int sys_sendmessage(Process *process, int function, int dest, Message *message) {
     assert(getPid(process) != dest);
     assert(dest < NR_PROCS + NR_TASKS);
-    MESSAGECHAIN *temp;
-    PROCESS *sender = process;
-    PROCESS *receiver = &process_table[dest];
-    if (receiver->receivefrom == ANY || receiver->receivefrom == dest) {
+    MessageChain *temp;
+    Process *sender = process;
+    Process *receiver = &process_table[dest];
+    if ((receiver->receivefrom == ANY) || (receiver->receivefrom == sender->pid)) {
         if (receiver->queue.count == 0) { //it is receiver's first message, create a queue
             assert(receiver->queue.last == NULL);
             assert(receiver->queue.start == NULL);
@@ -73,7 +78,7 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             receiver->queue.last = receiver->queue.start;
             receiver->queue.count++;
             assert(receiver->queue.count == 1);
-            physicCopy(&receiver->queue.start->message, (void *) getLinearAddr(sender, message), sizeof(MESSAGE));
+            physicCopy(&receiver->queue.start->message, (void *) getLinearAddr(sender, message), sizeof(Message));
             receiver->queue.start->prev = NULL;
             receiver->queue.start->next = NULL;
             receiver->queue.start->message.sender = sender->pid;
@@ -83,7 +88,7 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
             if (temp == NULL) {
                 return 2;
             }
-            physicCopy(temp, (void *) getLinearAddr(sender, message), sizeof(MESSAGE));
+            physicCopy(temp, (void *) getLinearAddr(sender, message), sizeof(Message));
             temp->next = receiver->queue.start;
             temp->prev = NULL;
             temp->message.sender = sender->pid;
@@ -110,41 +115,59 @@ int sys_sendmessage(PROCESS *process, int function, int dest, MESSAGE *message) 
     return 1;//dest is not allowed receive
 }
 
-int sys_receivemessage(PROCESS *process, int function, u32 src, MESSAGE *message) {
-    assert(message != NULL);
-    assert(src == ANY || src == NOTASK || src < (NR_TASKS + NR_PROCS));
+int sys_receivemessage(Process *process, int function, u32 src, Message *message) {
+
+    assert(src == INTERRUPT || src == ANY || src == NOTASK || src < (NR_TASKS + NR_PROCS));
     assert(process->status == RUNNABLE);
-    process->receivefrom = src;
-    MESSAGECHAIN *temp;
-    if (process->queue.count > 0) {
-        assert(process->queue.last != NULL);
-        temp = process->queue.last;
-        if (process->queue.count == 1) {//only one message
-            assert(process->queue.start == process->queue.last);
-            process->queue.start = NULL;
-            process->queue.last = NULL;
-        } else {
-            assert(temp->prev != NULL);
-            assert(temp->prev->next == temp);
-            temp->prev->next = NULL;
-            process->queue.last = temp->prev;
-            if (process->queue.count == 1) {
-                assert(process->queue.start == process->queue.last);
+    switch (function) {
+        case INT:
+            if (process->interrupt) {
+                process->interrupt = FALSE;
+                return 0;
+            } else {
+                schedule();
+                return 1;
             }
-        }
-        physicCopy((void *) getLinearAddr(process, message), &temp->message, sizeof(MESSAGE));
-        temp->active = FALSE;
-        process->queue.count--;
-        return 0;//get queue
+        case INFORM:
+            process->receivefrom = src;
+            return 0;
+        case RECEIVE:
+            assert(message != NULL);
+            process->receivefrom = src;
+            MessageChain *temp;
+            if (process->queue.count > 0) {
+                assert(process->queue.last != NULL);
+                temp = process->queue.last;
+                if (process->queue.count == 1) {//only one message
+                    assert(process->queue.start == process->queue.last);
+                    process->queue.start = NULL;
+                    process->queue.last = NULL;
+                } else {
+                    assert(temp->prev != NULL);
+                    assert(temp->prev->next == temp);
+                    temp->prev->next = NULL;
+                    process->queue.last = temp->prev;
+                    if (process->queue.count == 1) {
+                        assert(process->queue.start == process->queue.last);
+                    }
+                }
+                physicCopy((void *) getLinearAddr(process, message), &temp->message, sizeof(Message));
+                temp->active = FALSE;
+                process->queue.count--;
+                return 0;//get queue
+            }
+            // no message in quequ
+            assert(process->queue.count == 0);
+            schedule();
+            return 1;
+        default:
+            break;
     }
-    // no message in quequ
-    assert(process->queue.count == 0);
-    schedule();
-    return 1;
+    return 2;
 }
 
-static u32 getLinearAddr(PROCESS *process, void *virtualAddr) {
-    DESCRIPTOR *descriptor = &(process->ldts[INDEX_LDT_RW]);
+static u32 getLinearAddr(Process *process, void *virtualAddr) {
+    Descriptor *descriptor = &(process->ldts[INDEX_LDT_RW]);
     u32 segBase = descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24;
     return segBase + (u32) virtualAddr;
 }
@@ -159,32 +182,26 @@ static int physicCopy(void *dest, void *src, int size) {
     }
 }
 
-//static int physicSet(void *dst, u8 value, int size) {
-//    char *p_d = (char *) dst;
-//    for (int i = 0; i < size; ++i) {
-//        *p_d++ = value;
-//    }
-//}
 
-static u32 getPid(PROCESS *process) {
+static u32 getPid(Process *process) {
     return process->pid;
 }
 
 void testA() {
+
+    Message msg;
+    msg.type = DEV_OPEN;
     while (1) {
-        printf("A:%d  ", get_ticks());
         wait(1000);
-//        if (wait(100)) {
-//            printf("wait error");
-//            while (TRUE);
-//        }
+        sendmessage(0, HDPID, &msg);
+//        printf("A:%d  ", getTicks());
     }
 }
 
 void testB() {
     while (1) {
-        printf("B");
-        get_ticks();
+//        printf("B");
+//        getTicks();
         wait(5000);
     }
 }
