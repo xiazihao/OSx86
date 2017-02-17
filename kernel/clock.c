@@ -5,6 +5,10 @@
 #include "global.h"
 #include "proto.h"
 
+/**
+ * Clock interrupt handler
+ * @param irq interrupt index of 8259
+ */
 void clockHandler(int irq) {
     ticks++;
     p_proc_ready->ticks--;

@@ -161,6 +161,10 @@ int wait(int millsec) {
     return 1; // send faild
 }
 
+/**
+ * System call function, get ticks from start of os.
+ * @return return 0: get ticks failed
+ */
 int getTicks() {
     Message message;
     receivemessage(INFORM, ANY, NULL);
@@ -173,8 +177,4 @@ int getTicks() {
     return 0;
 }
 
-void IDLE() {
-//    printf("idle is running");
-    while (1) {
-    }
-}
+

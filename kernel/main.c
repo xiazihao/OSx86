@@ -6,6 +6,9 @@
 #include "keyboard.h"
 #include "lib.h"
 
+/**
+ * Init process
+ */
 void kernel_main() {
     disp_str("-----\"kernel_main\" begins-----\n");
     Process *p_proc = process_table;
@@ -72,18 +75,4 @@ void kernel_main() {
     while (1) {}
 
 }
-
-//typedef struct {
-//    u32 baseLow;
-//    u32 baseHigh;
-//    u32 lengthLow;
-//    u32 lengthHigh;
-//    u32 type;
-//} ARDS;
-//
-//int getPhysicalSize() {
-//    ARDS *ards = 0x91010;
-//    printf("baselow: %x,basehight: %x, lengthlow: %x, lengthhigh: %x, type: %d", ards->baseLow, ards->baseHigh,
-//           ards->lengthLow, ards->lengthHigh, ards->type);
-//}
 

@@ -4,6 +4,12 @@
 #include "type.h"
 #include "proto.h"
 
+/**
+ * Print string to screen
+ * @param format
+ * @param ...
+ * @return return the size of printed string
+ */
 int printf(const char *format, ...) {
     int i;
     char buf[256];

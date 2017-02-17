@@ -1,13 +1,13 @@
 #include <lib.h>
 #include <process.h>
 #include <systask.h>
-#include "const.h"
-#include "global.h"
-#include "protect.h"
-#include "proto.h"
-#include "type.h"
-#include "process.h"
-#include "hd.h"
+#include <const.h>
+#include <global.h>
+#include <protect.h>
+#include <proto.h>
+#include <type.h>
+#include <process.h>
+#include <hd.h>
 
 MessageChain messageQueue[QUEUESIZE];
 
@@ -19,6 +19,10 @@ static u32 getLinearAddr(Process *process, void *virtualAddr);
 
 static MessageChain *getQueuePosition();
 
+/**
+ * Get empty queueposition.
+ * @return return empty messagequeue address, retur NULL when messagequeue if full
+ */
 static MessageChain *getQueuePosition() {
     for (int i = 0; i < QUEUESIZE; ++i) {
         if (messageQueue[i].active == FALSE) {
@@ -28,18 +32,22 @@ static MessageChain *getQueuePosition() {
     return NULL;
 }
 
+/**
+ * Send interrupt signal to process and inform process to handler interrupt.
+ * @param handlerPid  the interrupt handler process' pid
+ * @return
+ */
 int informInterrupt(u32 handlerPid) {
     assert(handlerPid < NR_PROCS + NR_TASKS - 1);
     Process *process = &process_table[handlerPid];
 //    if (process->receivefrom == INTERRUPT || process->receivefrom == ANY) {
-        process->interrupt = TRUE;
-        p_proc_ready = process;
-//    }
+    process->interrupt = TRUE;
+    p_proc_ready = process;
 }
-//public int sys_get_ticks() {
-//    return ticks;
-//}
 
+/**
+ * Process schedule function.
+ */
 void schedule() {
     if (p_proc_ready->ticks > 0) {
         return;
@@ -54,12 +62,23 @@ void schedule() {
     }
 }
 
+/**
+ * Init message queue.
+ */
 void initQueue() {
     for (int i = 0; i < QUEUESIZE; ++i) {
         memset(&messageQueue[i], 0, sizeof(MessageChain));
     }
 }
 
+/**
+ * System call, send function in IPC
+ * @param process sender process
+ * @param function process method type, function could be:
+ * @param dest destination process' pid
+ * @param message message struct's address, note:kernel and process are not in same address space
+ * @return 0:send message success, 1:destination refuse to receive, 2:no enough empty message queue...
+ */
 int sys_sendmessage(Process *process, int function, int dest, Message *message) {
     assert(getPid(process) != dest);
     assert(dest < NR_PROCS + NR_TASKS);
@@ -115,6 +134,14 @@ int sys_sendmessage(Process *process, int function, int dest, Message *message) 
     return 1;//dest is not allowed receive
 }
 
+/**
+ * System call, receive message in IPC.
+ * @param process receiver process
+ * @param function receive method type, function could be: INT, INFORM, RECEIVE ...
+ * @param src receiver process allowed PID
+ * @param message receiver process message buf's address
+ * @return 0:success 1: 2: ...
+ */
 int sys_receivemessage(Process *process, int function, u32 src, Message *message) {
 
     assert(src == INTERRUPT || src == ANY || src == NOTASK || src < (NR_TASKS + NR_PROCS));
@@ -203,5 +230,10 @@ void testB() {
 //        printf("B");
 //        getTicks();
         wait(5000);
+    }
+}
+
+void IDLE() {
+    while (1) {
     }
 }

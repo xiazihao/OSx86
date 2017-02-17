@@ -73,6 +73,9 @@ void hwint14();
 
 void hwint15();
 
+/**
+ * Init interrupt descriptor
+ */
 void initProtect() {
     init_8259A();
     init_idt_desc(INT_VECTOR_DIVIDE, DA_386IGate, divide_error, PRIVILEGE_KRNL);
@@ -159,6 +162,14 @@ void initProtect() {
 
 }
 
+/**
+ * Exception handler
+ * @param vec_no exception vector number
+ * @param err_code error code
+ * @param eip eip when exception occur
+ * @param cs cs when exception occur
+ * @param eflags eflags when exception occur
+ */
 void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
     int i;
     int text_color = 0x74;
@@ -184,7 +195,6 @@ void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
                        "#XF SIMD Floating-Point Exception"
     };
 
-    /* 通过打印空格的方式清空屏幕的前五行，并把 disp_pos 清零 */
     disp_pos = 0;
     for (i = 0; i < 80 * 5; i++) {
         disp_str(" ");
@@ -206,6 +216,13 @@ void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags) {
     }
 }
 
+/**
+ * Init idt descriptor
+ * @param vector interrupt number
+ * @param desc_type descriptor type, interrupt type
+ * @param handler interrupt handler function address
+ * @param privilege interrupt privilege
+ */
 static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege) {
     Gate *p_gate = &idt[vector];
     u32 base = (u32) handler;
@@ -216,6 +233,13 @@ static void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handle
     p_gate->attr = desc_type | (privilege << 5);
 }
 
+/**
+ * Init descriptor
+ * @param p_desc descriptor address
+ * @param base base address element of descriptor
+ * @param limit limit element of descriptor
+ * @param attribute attribute of descriptor
+ */
 static void init_descriptor(Descriptor *p_desc, u32 base, u32 limit, u16 attribute) {
     p_desc->limit_low = limit & 0xffff;
     p_desc->base_low = base & 0xffff;
