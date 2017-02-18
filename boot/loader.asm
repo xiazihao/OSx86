@@ -140,14 +140,14 @@ LABEL_FILENAME_FOUND:			; 找到 KERNEL.BIN 后便来到这里继续
 	mov	ax, cx			; ax <- Sector 号
 
 LABEL_GOON_LOADING_FILE:
-	push	ax			; ┓
-	push	bx			; ┃
-	mov	ah, 0Eh			; ┃ 每读一个扇区就在 "Loading  " 后面打一个点, 形成这样的效果:
-	mov	al, '.'			; ┃
-	mov	bl, 0Fh			; ┃ Loading ......
-	int	10h			; ┃
-	pop	bx			; ┃
-	pop	ax			; ┛
+	; push	ax			; ┓
+	; push	bx			; ┃
+	; mov	ah, 0Eh			; ┃ 每读一个扇区就在 "Loading  " 后面打一个点, 形成这样的效果:
+	; mov	al, '.'			; ┃
+	; mov	bl, 0Fh			; ┃ Loading ......
+	; int	10h			; ┃
+	; pop	bx			; ┃
+	; pop	ax			; ┛
 
 	mov	cl, 1
 	call	ReadSector
@@ -355,11 +355,11 @@ LABEL_PM_START:
 	mov	ss, ax
 	mov	esp, TopOfStack
 
-	push	szMemChkTitle
-	call	DispStr
-	add	esp, 4
+	; push	szMemChkTitle
+	; call	DispStr
+	; add	esp, 4
 
-	call	DispMemInfo
+	; call	DispMemInfo
 	; call	SetupPaging
 
 	; mov	ah, 0Fh				; 0000: 黑底    1111: 白字

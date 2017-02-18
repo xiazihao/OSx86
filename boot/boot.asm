@@ -1,18 +1,8 @@
-
-;%define	_BOOT_DEBUG_	; 做 Boot Sector 时一定将此行注释掉!将此行打开后用 nasm Boot.asm -o Boot.com 做成一个.COM文件易于调试
-
-%ifdef	_BOOT_DEBUG_
-	org  0100h			; 调试状态, 做成 .COM 文件, 可调试
-%else
-	org  07c00h			; Boot 状态, Bios 将把 Boot Sector 加载到 0:7C00 处并开始执行
-%endif
+org  07c00h			; Boot 状态, Bios 将把 Boot Sector 加载到 0:7C00 处并开始执行
 
 ;================================================================================================
-%ifdef	_BOOT_DEBUG_
-BaseOfStack		equ	0100h	; 调试状态下堆栈基地址(栈底, 从这个位置向低地址生长)
-%else
 BaseOfStack		equ	07c00h	; Boot状态下堆栈基地址(栈底, 从这个位置向低地址生长)
-%endif
+
 
 %include "load.inc"
 ;================================================================================================
@@ -36,8 +26,8 @@ LABEL_START:
 	mov	dx, 0184fh		; 右下角: (80, 50)
 	int	10h			; int 10h
 
-	mov	dh, 0			; "Booting  "
-	call	DispStr			; 显示字符串
+	; mov	dh, 0			; "Booting  "
+	; call	DispStr			; 显示字符串
 	
 	xor	ah, ah	; ┓
 	xor	dl, dl	; ┣ 软驱复位
@@ -89,14 +79,14 @@ LABEL_GOTO_NEXT_SECTOR_IN_ROOT_DIR:
 	jmp	LABEL_SEARCH_IN_ROOT_DIR_BEGIN
 
 LABEL_NO_LOADERBIN:
-	mov	dh, 2			; "No LOADER."
-	call	DispStr			; 显示字符串
-%ifdef	_BOOT_DEBUG_
-	mov	ax, 4c00h		; ┓
-	int	21h			; ┛没有找到 LOADER.BIN, 回到 DOS
-%else
+	; mov	dh, 2			; "No LOADER."
+	; call	DispStr			; 显示字符串
+; %ifdef	_BOOT_DEBUG_
+; 	mov	ax, 4c00h		; ┓
+; 	int	21h			; ┛没有找到 LOADER.BIN, 回到 DOS
+; %else
 	jmp	$			; 没有找到 LOADER.BIN, 死循环在这里
-%endif
+; %endif
 
 LABEL_FILENAME_FOUND:			; 找到 LOADER.BIN 后便来到这里继续
 	mov	ax, RootDirSectors
@@ -112,14 +102,14 @@ LABEL_FILENAME_FOUND:			; 找到 LOADER.BIN 后便来到这里继续
 	mov	ax, cx			; ax <- Sector 号
 
 LABEL_GOON_LOADING_FILE:
-	push	ax			; ┓
-	push	bx			; ┃
-	mov	ah, 0Eh			; ┃ 每读一个扇区就在 "Booting  " 后面打一个点, 形成这样的效果:
-	mov	al, '.'			; ┃
-	mov	bl, 0Fh			; ┃ Booting ......
-	int	10h			; ┃
-	pop	bx			; ┃
-	pop	ax			; ┛
+	; push	ax			; ┓
+	; push	bx			; ┃
+	; mov	ah, 0Eh			; ┃ 每读一个扇区就在 "Booting  " 后面打一个点, 形成这样的效果:
+	; mov	al, '.'			; ┃
+	; mov	bl, 0Fh			; ┃ Booting ......
+	; int	10h			; ┃
+	; pop	bx			; ┃
+	; pop	ax			; ┛
 
 	mov	cl, 1
 	call	ReadSector
@@ -135,8 +125,8 @@ LABEL_GOON_LOADING_FILE:
 	jmp	LABEL_GOON_LOADING_FILE
 LABEL_FILE_LOADED:
 
-	mov	dh, 1			; "Ready."
-	call	DispStr			; 显示字符串
+	; mov	dh, 1			; "Ready."
+	; call	DispStr			; 显示字符串
 
 ; *****************************************************************************************************
 	jmp	BaseOfLoader:OffsetOfLoader	; 这一句正式跳转到已加载到内存中的 LOADER.BIN 的开始处
@@ -165,24 +155,24 @@ Message2		db	"No LOADER"; 9字节, 不够则用空格补齐. 序号 2
 ;============================================================================
 
 
-;----------------------------------------------------------------------------
-; 函数名: DispStr
-;----------------------------------------------------------------------------
-; 作用:
-;	显示一个字符串, 函数开始时 dh 中应该是字符串序号(0-based)
-DispStr:
-	mov	ax, MessageLength
-	mul	dh
-	add	ax, BootMessage
-	mov	bp, ax			; ┓
-	mov	ax, ds			; ┣ ES:BP = 串地址
-	mov	es, ax			; ┛
-	mov	cx, MessageLength	; CX = 串长度
-	mov	ax, 01301h		; AH = 13,  AL = 01h
-	mov	bx, 0007h		; 页号为0(BH = 0) 黑底白字(BL = 07h)
-	mov	dl, 0
-	int	10h			; int 10h
-	ret
+; ;----------------------------------------------------------------------------
+; ; 函数名: DispStr
+; ;----------------------------------------------------------------------------
+; ; 作用:
+; ;	显示一个字符串, 函数开始时 dh 中应该是字符串序号(0-based)
+; DispStr:
+; 	mov	ax, MessageLength
+; 	mul	dh
+; 	add	ax, BootMessage
+; 	mov	bp, ax			; ┓
+; 	mov	ax, ds			; ┣ ES:BP = 串地址
+; 	mov	es, ax			; ┛
+; 	mov	cx, MessageLength	; CX = 串长度
+; 	mov	ax, 01301h		; AH = 13,  AL = 01h
+; 	mov	bx, 0007h		; 页号为0(BH = 0) 黑底白字(BL = 07h)
+; 	mov	dl, 0
+; 	int	10h			; int 10h
+; 	ret
 
 
 ;----------------------------------------------------------------------------

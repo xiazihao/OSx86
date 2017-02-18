@@ -26,8 +26,16 @@ void outChar(Console *p_console, char ch) {
         case '\b':
             if (p_console->cursor > p_console->original_addr) { //make sure that cursor is not go out of limit
                 p_console->cursor--;
+                //clear with space
                 *(p_vmem - 2) = ' ';
                 *(p_vmem - 1) = DEFAULT_CHAR_COLOR;
+            }
+            break;
+        case 9:
+            //make sure that cursor is not go out of limit
+            if (p_console->cursor + 4 < p_console->original_addr + p_console->v_mem_limit) {
+                p_console->cursor =
+                        ((p_console->cursor - p_console->original_addr) / 4 + 1) * 4 + p_console->original_addr;
             }
             break;
         default:
@@ -60,15 +68,15 @@ void initScreen(TTY *p_tty) {
     p_tty->p_console->current_start_addr = p_tty->p_console->original_addr;
 
     p_tty->p_console->cursor = p_tty->p_console->original_addr;
-    if (nr_tty == 0) {
-        p_tty->p_console->cursor = disp_pos / 2;
-        disp_pos = 0;
-    } else {
+//    if (nr_tty == 0) {
+//        p_tty->p_console->cursor = disp_pos / 2;
+//        disp_pos = 0;
+//    } else {
         outChar(p_tty->p_console, nr_tty + '0');
         outChar(p_tty->p_console, '#');
         outChar(p_tty->p_console, '\n');
 
-    }
+//    }
     set_cursor(p_tty->p_console->cursor);
 }
 

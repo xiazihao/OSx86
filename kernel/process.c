@@ -218,9 +218,11 @@ void testA() {
 
     Message msg;
     msg.type = DEV_OPEN;
+    sendmessage(0, PID_HD, &msg);
+
     while (1) {
+
         wait(10000);
-//        sendmessage(0, PID_HD, &msg);
 //        printf("A:%d  ", getTicks());
     }
 }

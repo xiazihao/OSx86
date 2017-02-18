@@ -8,6 +8,19 @@
 #include "type.h"
 
 typedef struct {
+    u8 status;//0x80 active part, 0x00 inactive part
+    u8 startHead;
+    u8 startSector;//0 - 5 bits
+    u8 startCylinder;//6 - 7 and all
+    u8 sysId;
+    u8 endHead;
+    u8 endSector;//0 - 5
+    u8 endCylinder;//6 - 7 and all
+    u32 startSectorFromStart;
+    u32 sectorCount;
+} PartitionEntry;
+
+typedef struct {
     u8 features;
     u8 count;
     u8 lba_low;
@@ -15,9 +28,17 @@ typedef struct {
     u8 lba_high;
     u8 device;
     u8 command;
-} HDCMD;
+} HdCmd;
+typedef PartitionEntry PartitionBasic;
+typedef struct {
+    PartitionBasic partitionBasic;
+    char name[5];
+} PartitionExtent;
+typedef struct {
+    PartitionExtent partitionInformation[16];
+} HdInformation;
 #define ATA_IDENTIFY        0xEC
-
+#define ATA_READ            0x20
 #define DEV_OPEN    1
 
 //register
@@ -45,4 +66,7 @@ typedef struct {
 #define NR_PRIM_PER_DRIVE   (NR_PART_PER_DRIVE + 1)
 #define MAX_PRIM    (MAX_DRIVES * NR_PRIM_PER_DRIVE - 1)
 #define MAX_SUBPARTITIONS   (NR_SUB_PER_DRIVE * MAX_DRIVES)
+
+
+#define    PARTITION_TABLE_OFFSET    0x1BE
 #endif //CHP6_HD_H

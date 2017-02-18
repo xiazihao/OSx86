@@ -10,8 +10,8 @@
  * prepare gdtr, idtr, idt, should be called very early
  */
 void cstart() {
-    disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-                     "-----\"cstart\" begins-----\n");
+//    disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+//                     "-----\"cstart\" begins-----\n");
     memcpy(&gdt, (void *) (*((u32 *) (&gdt_ptr[2]))), *((u16 *) (&gdt_ptr[0])) + 1);
     u16 *p_gdt_limit = (u16 *) (&gdt_ptr[0]);
     u32 *p_gdt_base = (u32 *) (&gdt_ptr[2]);
@@ -24,5 +24,5 @@ void cstart() {
     *p_idt_base = (u32) &idt;
     initProtect();
 
-    disp_str("-----\"cstart\" ends-----\n");
+//    disp_str("-----\"cstart\" ends-----\n");
 }

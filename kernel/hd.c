@@ -7,14 +7,18 @@
 #include <lib.h>
 #include <hd.h>
 #include <systask.h>
+#include <fs.h>
 
-#define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) |		\
-					      ((drv) << 4) |		\
-					      (lba_highest & 0xF) | 0xA0)
+#define    MAKE_DEVICE_REG(lba, drv, lba_highest) (((lba) << 6) |        \
+                          ((drv) << 4) |        \
+                          (lba_highest & 0xF) | 0xA0)
 
 #define SECTOR_SIZE     512
 static u8 hd_status;
 static u8 hdbuf[SECTOR_SIZE * 2];
+static HdInformation hdInfo[1];
+
+static void clearPartitionTable();
 
 static void init_hd();
 
@@ -24,10 +28,13 @@ void print_identify_info(u16 *hdinfo);
 
 static void interrupt_wait();
 
-static void hd_cmd_out(HDCMD *hdcmd);
+static void hd_cmd_out(HdCmd *hdcmd);
+
+void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num);
 
 void hd_handler(int irq);
 
+static void printPartitionTable();
 
 static void init_hd() {
     u8 *pNrDrives = (u8 *) (0x475);
@@ -39,7 +46,7 @@ static void init_hd() {
 }
 
 static void hd_identify(int drive) {
-    HDCMD cmd;
+    HdCmd cmd;
     cmd.device = MAKE_DEVICE_REG(0, drive, 0);
     cmd.command = ATA_IDENTIFY;
     hd_cmd_out(&cmd);
@@ -47,7 +54,13 @@ static void hd_identify(int drive) {
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
     print_identify_info((u16 *) hdbuf);
 
+//    PartitionEntry partEntry[NR_SUB_PER_DRIVE];
+//    getPartTable(drive, drive, &hdInfo[0].partitionBasic);
+    getAllPartition();
+    printPartitionTable();
+//    printf("SystemType: %x", partEntry[0].sysId);
 }
+
 
 void print_identify_info(u16 *hdinfo) {
     int i, k;
@@ -82,7 +95,7 @@ void print_identify_info(u16 *hdinfo) {
     printf("HD size: %dMB\n", sectors * 512 / 1000000);
 }
 
-static void hd_cmd_out(HDCMD *hdcmd) {
+static void hd_cmd_out(HdCmd *hdcmd) {
     if (waitfor(STATUS_BUSY, 0, 10000)) {
         printf("hd error");
         while (1);
@@ -115,7 +128,6 @@ static int waitfor(int mask, int value, int timeout) {
 static void interrupt_wait() {
     receivemessage(INFORM, ANY, NULL);
     while (receivemessage(INT, ANY, NULL));
-    printf("get");
 }
 
 void task_hd() {
@@ -132,6 +144,81 @@ void task_hd() {
                 break;
         }
     }
+}
+
+static void clearPartitionTable() {
+    memset(hdInfo, 0, sizeof(HdInformation));
+}
+
+static void printPartitionTable() {
+    for (int i = 0; i < 10; ++i) {
+        if (hdInfo[0].partitionInformation[i].partitionBasic.sysId == 0) {
+            continue;
+        }
+        printf("Partition: %s, sysId: %x, active%x\n", hdInfo[0].partitionInformation[i].name,
+               hdInfo[0].partitionInformation[i].partitionBasic.sysId,
+               hdInfo[0].partitionInformation[i].partitionBasic.status);
+        printf("start: %x,count: %x", hdInfo[0].partitionInformation[i].partitionBasic.startSectorFromStart,
+               hdInfo[0].partitionInformation[i].partitionBasic.sectorCount);
+        printf("\n");
+    }
+}
+
+void getAllPartition() {
+    clearPartitionTable();
+    PartitionEntry partitionBuf[4];
+    getPartTable(0, 0, partitionBuf, NR_PART_PER_DRIVE);
+    memcpy(&hdInfo[0].partitionInformation[0].partitionBasic, &partitionBuf[0], sizeof(PartitionEntry));
+    memcpy(&hdInfo[0].partitionInformation[1].partitionBasic, &partitionBuf[1], sizeof(PartitionEntry));
+    memcpy(&hdInfo[0].partitionInformation[2].partitionBasic, &partitionBuf[2], sizeof(PartitionEntry));
+    memcpy(&hdInfo[0].partitionInformation[3].partitionBasic, &partitionBuf[3], sizeof(PartitionEntry));
+    int temp = NR_PART_PER_DRIVE;
+    for (int i = 0; i < 4; ++i) {
+        //primary partition
+        if (hdInfo[0].partitionInformation[i].partitionBasic.sysId != 0) {
+            hdInfo[0].partitionInformation[i].name[0] = 'h';
+            hdInfo[0].partitionInformation[i].name[1] = 'd';
+            hdInfo[0].partitionInformation[i].name[2] = '1' + i;
+            hdInfo[0].partitionInformation[i].name[3] = 0;
+        }
+        //logical partition
+        if (hdInfo[0].partitionInformation[i].partitionBasic.sysId == 5) {
+            char idx = 'a';
+            u32 baseSector = hdInfo[0].partitionInformation[i].partitionBasic.startSectorFromStart;
+            u32 startSector = hdInfo[0].partitionInformation[i].partitionBasic.startSectorFromStart;
+            do {
+                getPartTable(0, startSector, partitionBuf, 2);
+                memcpy(&hdInfo[0].partitionInformation[temp].partitionBasic, partitionBuf, sizeof(PartitionEntry));
+
+                hdInfo[0].partitionInformation[temp].name[0] = 'h';
+                hdInfo[0].partitionInformation[temp].name[1] = 'd';
+                hdInfo[0].partitionInformation[temp].name[2] = '1' + i;
+                hdInfo[0].partitionInformation[temp].name[3] = idx;
+                hdInfo[0].partitionInformation[temp].name[4] = 0;
+
+                startSector = partitionBuf[1].startSectorFromStart + baseSector;
+                temp++;
+                idx++;
+//                assert(temp < 5);
+            } while (partitionBuf[1].sysId == 5);
+
+        }
+    }
+}
+
+void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num) {
+    HdCmd hdcmd;
+    hdcmd.features = 0;
+    hdcmd.count = 1;
+    hdcmd.lba_low = sect_nr & 0xff;
+    hdcmd.lba_mid = (sect_nr >> 8) & 0xff;
+    hdcmd.lba_high = (sect_nr >> 16) & 0xff;
+    hdcmd.device = MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf);
+    hdcmd.command = ATA_READ;
+    hd_cmd_out(&hdcmd);
+    interrupt_wait();
+    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
+    memcpy(partEntry, hdbuf + PARTITION_TABLE_OFFSET, sizeof(PartitionEntry) * num);
 }
 
 void hd_handler(int irq) {
