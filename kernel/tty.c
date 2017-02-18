@@ -50,13 +50,13 @@ void inProcess(TTY *p_tty, u32 key) {
                 break;
             case UP:
 //                if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-                    scrollScreen(p_tty->p_console, SCR_DN);
+                    scrollScreen(p_tty->p_console, SCR_UP);
 //                }
 
                 break;
             case DOWN:
 //                if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-                    scrollScreen(p_tty->p_console, SCR_UP);
+                    scrollScreen(p_tty->p_console, SCR_DN);
 //                }
                 break;
             case F1:

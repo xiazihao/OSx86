@@ -42,4 +42,8 @@
 #define NR_CONSOLES 3
 //system call
 #define NR_SYS_CALL 3
+
+//page
+#define PAGEDIRBASE 0x200000
+#define PAGETABLEBASE 0x201000
 #endif

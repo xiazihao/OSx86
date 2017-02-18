@@ -700,11 +700,11 @@ SetupPaging:
 	add	eax, 4096		; 每一页指向 4K 的空间
 	loop	.2
 
-	mov	eax, PageDirBase
-	mov	cr3, eax
-	mov	eax, cr0
-	or	eax, 80000000h
-	mov	cr0, eax
+	; mov	eax, PageDirBase
+	; mov	cr3, eax
+	; mov	eax, cr0
+	; or	eax, 80000000h
+	; mov	cr0, eax
 	jmp	short .3
 .3:
 	nop

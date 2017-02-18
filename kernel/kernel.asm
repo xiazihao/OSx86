@@ -68,8 +68,16 @@ _start:	; 跳到这里来的时候，我们假设 gs 指向显存
 	mov dword[disp_pos],0
 	sgdt [gdt_ptr]
 	call cstart
+	;enable page
+	mov	eax, 200000h
+	mov	cr3, eax
+	mov	eax, cr0
+	or	eax, 80000000h
+	mov	cr0, eax
+	; call setpage
 	lgdt [gdt_ptr]
 	lidt [idt_ptr]
+
 	jmp SELECTOR_KERNEL_CS:csinit
 csinit:
 	xor eax,eax
@@ -93,6 +101,15 @@ restart_reenter:					; get into interrupt, the esp will start here and save the 
 	popad
 	add esp,4 ;now esp is Process.STACKFRAM.eip
 	iretd
+
+
+setpage:
+	mov	eax, 200000h
+	mov	cr3, eax
+	mov	eax, cr0
+	or	eax, 80000000h
+	mov	cr0, eax
+	ret
 
 
 
