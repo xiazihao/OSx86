@@ -3,7 +3,10 @@
 #define GDT_SIZE 128
 #define IDT_SIZE 256
 #define NR_IRQ 16
-//8259 interrupt
+
+/**
+ * Interrupt controller(8259) port
+ */
 #define INT_M_CTL 0x20
 #define INT_M_CTLMASK 0x21 //ocw2
 #define INT_S_CTL 0xa0
@@ -35,7 +38,7 @@
 //interrupt index
 #define CLOCK_IRQ 0
 #define KEYBOARD_IRQ 1
-#define CASCADE_IRQ	2
+#define CASCADE_IRQ    2
 #define AT_WINI_IRQ 14
 
 //tty

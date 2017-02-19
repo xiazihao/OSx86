@@ -36,10 +36,15 @@ typedef struct {
 } PartitionExtent;
 typedef struct {
     PartitionExtent partitionInformation[16];
+    int open_count;
 } HdInformation;
 #define ATA_IDENTIFY        0xEC
 #define ATA_READ            0x20
+
 #define DEV_OPEN    1
+#define DEV_CLOSE   2
+#define DEV_READ    3
+#define DEV_WRITE   4
 
 //register
 #define REG_DATA        0x1F0

@@ -8,6 +8,7 @@
 #include <hd.h>
 #include <systask.h>
 #include <fs.h>
+#include <global.h>
 
 #define    MAKE_DEVICE_REG(lba, drv, lba_highest) (((lba) << 6) |        \
                           ((drv) << 4) |        \
@@ -18,17 +19,19 @@ static u8 hd_status;
 static u8 hdbuf[SECTOR_SIZE * 2];
 static HdInformation hdInfo[1];
 
-static void clearPartitionTable();
+static void hdOpen(int device);
 
-static void init_hd();
+static void partition();
 
-static int waitfor(int mask, int value, int timeout);
+static void initHardDrive();
+
+static int waitFor(int mask, int value, int timeout);
 
 void print_identify_info(u16 *hdinfo);
 
-static void interrupt_wait();
+static void interruptWait();
 
-static void hd_cmd_out(HdCmd *hdcmd);
+static void commandOut(HdCmd *hdcmd);
 
 void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num);
 
@@ -36,31 +39,33 @@ void hd_handler(int irq);
 
 static void printPartitionTable();
 
-static void init_hd() {
+/**
+ * Init hard drive: get drive nubmer; set hard drive interrupt handler; enable hard drive handler;
+ * init hard drive information structure
+ * It should be firstly call before every operation about hard drive
+ */
+static void initHardDrive() {
     u8 *pNrDrives = (u8 *) (0x475);
     printf("NrDrives:%d.\n", *pNrDrives);
     assert(*pNrDrives);
     putIrqHandler(AT_WINI_IRQ, hd_handler);
     enable_irq(CASCADE_IRQ);
     enable_irq(AT_WINI_IRQ);
+    //init hard drive information structure
+    memset(hdInfo, 0, sizeof(HdInformation));
 }
 
 static void hd_identify(int drive) {
     HdCmd cmd;
     cmd.device = MAKE_DEVICE_REG(0, drive, 0);
     cmd.command = ATA_IDENTIFY;
-    hd_cmd_out(&cmd);
-    interrupt_wait();
+    commandOut(&cmd);
+    interruptWait();
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
     print_identify_info((u16 *) hdbuf);
-
-//    PartitionEntry partEntry[NR_SUB_PER_DRIVE];
-//    getPartTable(drive, drive, &hdInfo[0].partitionBasic);
-    getAllPartition();
-    printPartitionTable();
-//    printf("SystemType: %x", partEntry[0].sysId);
+//    partition();
+//    printPartitionTable();
 }
-
 
 void print_identify_info(u16 *hdinfo) {
     int i, k;
@@ -95,8 +100,12 @@ void print_identify_info(u16 *hdinfo) {
     printf("HD size: %dMB\n", sectors * 512 / 1000000);
 }
 
-static void hd_cmd_out(HdCmd *hdcmd) {
-    if (waitfor(STATUS_BUSY, 0, 10000)) {
+/**
+ * Output command to hard drive controller
+ * @param hdcmd  command struct
+ */
+static void commandOut(HdCmd *hdcmd) {
+    if (waitFor(STATUS_BUSY, 0, 10000)) {
         printf("hd error");
         while (1);
     }
@@ -115,8 +124,16 @@ static void hd_cmd_out(HdCmd *hdcmd) {
 
 }
 
-static int waitfor(int mask, int value, int timeout) {
+/**
+ * Block until specific bit equals to given value
+ * @param mask bit mask of the bit which is concerned
+ * @param value bit value we expect, 0 or 1
+ * @param timeout timeout time
+ * @return 0:success 1:timeout
+ */
+static int waitFor(int mask, int value, int timeout) {
     int t = getTicks();
+    assert(value == 0 || value == 1);
     while ((getTicks() - t) * 1000 / HZ < timeout) {
         if ((in_byte(REG_STATUS) & mask) == value) {
             return 0;
@@ -125,32 +142,33 @@ static int waitfor(int mask, int value, int timeout) {
     return 1;
 }
 
-static void interrupt_wait() {
+/**
+ * Block until hard drive intterupt occur
+ */
+static void interruptWait() {
     receivemessage(INFORM, ANY, NULL);
     while (receivemessage(INT, ANY, NULL));
 }
 
 void task_hd() {
     Message msg;
-    init_hd();
+    initHardDrive();
     receivemessage(INFORM, ANY, &msg);
     while (TRUE) {
         while (receivemessage(RECEIVE, ANY, &msg));
         switch (msg.type) {
             case DEV_OPEN:
 //                printf("get open");
-                hd_identify(0);
+                hdOpen(0);
 //                while (1);
                 break;
         }
     }
 }
 
-static void clearPartitionTable() {
-    memset(hdInfo, 0, sizeof(HdInformation));
-}
-
 static void printPartitionTable() {
+    Process *p = &process_table[0];
+    printf("%s", p->name);
     for (int i = 0; i < 10; ++i) {
         if (hdInfo[0].partitionInformation[i].partitionBasic.sysId == 0) {
             continue;
@@ -164,8 +182,10 @@ static void printPartitionTable() {
     }
 }
 
-void getAllPartition() {
-    clearPartitionTable();
+/**
+ * Scan whole hard drive, get partition
+ */
+static void partition() {
     PartitionEntry partitionBuf[4];
     getPartTable(0, 0, partitionBuf, NR_PART_PER_DRIVE);
     memcpy(&hdInfo[0].partitionInformation[0].partitionBasic, &partitionBuf[0], sizeof(PartitionEntry));
@@ -174,14 +194,12 @@ void getAllPartition() {
     memcpy(&hdInfo[0].partitionInformation[3].partitionBasic, &partitionBuf[3], sizeof(PartitionEntry));
     int temp = NR_PART_PER_DRIVE;
     for (int i = 0; i < 4; ++i) {
-        //primary partition
         if (hdInfo[0].partitionInformation[i].partitionBasic.sysId != 0) {
             hdInfo[0].partitionInformation[i].name[0] = 'h';
             hdInfo[0].partitionInformation[i].name[1] = 'd';
-            hdInfo[0].partitionInformation[i].name[2] = '1' + i;
+            hdInfo[0].partitionInformation[i].name[2] = (char) ('1' + i);
             hdInfo[0].partitionInformation[i].name[3] = 0;
         }
-        //logical partition
         if (hdInfo[0].partitionInformation[i].partitionBasic.sysId == 5) {
             char idx = 'a';
             u32 baseSector = hdInfo[0].partitionInformation[i].partitionBasic.startSectorFromStart;
@@ -192,35 +210,59 @@ void getAllPartition() {
 
                 hdInfo[0].partitionInformation[temp].name[0] = 'h';
                 hdInfo[0].partitionInformation[temp].name[1] = 'd';
-                hdInfo[0].partitionInformation[temp].name[2] = '1' + i;
+                hdInfo[0].partitionInformation[temp].name[2] = (char) ('1' + i);
                 hdInfo[0].partitionInformation[temp].name[3] = idx;
                 hdInfo[0].partitionInformation[temp].name[4] = 0;
 
                 startSector = partitionBuf[1].startSectorFromStart + baseSector;
                 temp++;
                 idx++;
-//                assert(temp < 5);
             } while (partitionBuf[1].sysId == 5);
 
         }
     }
 }
 
+/**
+ * Get partition information by read hard drive sector
+ * @param drive drive index, 0: master hard drive
+ * @param sect_nr sector number
+ * @param partEntry address which receive partition information
+ * @param num max items of partition information
+ */
 void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num) {
     HdCmd hdcmd;
     hdcmd.features = 0;
     hdcmd.count = 1;
-    hdcmd.lba_low = sect_nr & 0xff;
-    hdcmd.lba_mid = (sect_nr >> 8) & 0xff;
-    hdcmd.lba_high = (sect_nr >> 16) & 0xff;
-    hdcmd.device = MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf);
+    hdcmd.lba_low = (u8) (sect_nr & 0xff);
+    hdcmd.lba_mid = (u8) ((sect_nr >> 8) & 0xff);
+    hdcmd.lba_high = (u8) ((sect_nr >> 16) & 0xff);
+    hdcmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
     hdcmd.command = ATA_READ;
-    hd_cmd_out(&hdcmd);
-    interrupt_wait();
+    commandOut(&hdcmd);
+    interruptWait();
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
     memcpy(partEntry, hdbuf + PARTITION_TABLE_OFFSET, sizeof(PartitionEntry) * num);
 }
 
+/**
+ *
+ * @param device
+ */
+static void hdOpen(int device) {
+    assert(device == 0);
+    hd_identify(device);
+    if (hdInfo[device].open_count == 0) {
+        partition();
+        printPartitionTable();
+    }
+    hdInfo[device].open_count++;
+}
+
+/**
+ * Hard drive interrupt handler
+ * @param irq interrupt index
+ */
 void hd_handler(int irq) {
     hd_status = in_byte(REG_STATUS);
     informInterrupt(PID_HD);

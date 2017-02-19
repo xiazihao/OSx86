@@ -15,7 +15,7 @@ static u32 getPid(Process *process);
 
 static int physicCopy(void *dest, void *src, int size);
 
-static u32 getLinearAddr(Process *process, void *virtualAddr);
+static u32 getLinearAddr(Process *process, void *virtual_addr);
 
 static MessageChain *getQueuePosition();
 
@@ -193,10 +193,10 @@ int sys_receivemessage(Process *process, int function, u32 src, Message *message
     return 2;
 }
 
-static u32 getLinearAddr(Process *process, void *virtualAddr) {
+static u32 getLinearAddr(Process *process, void *virtual_addr) {
     Descriptor *descriptor = &(process->ldts[INDEX_LDT_RW]);
     u32 segBase = descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24;
-    return segBase + (u32) virtualAddr;
+    return segBase + (u32) virtual_addr;
 }
 
 static int physicCopy(void *dest, void *src, int size) {

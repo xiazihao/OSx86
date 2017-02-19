@@ -92,8 +92,8 @@ typedef struct {
 
 int getPhysicalSize() {
     unsigned int total = 0;
-    int *num = 0x91000;
-    ARDS *ards = 0x91010;
+    unsigned int *num =(unsigned int *) 0x91000;
+    ARDS *ards = (ARDS*)0x91010;
     printf("number: %d \n", *num);
     for (int i = 0; i < *num; ++i) {
         printf("baselow: %x,basehight: %x, lengthlow: %x, lengthhigh: %x, type: %d\n", ards->baseLow, ards->baseHigh,
