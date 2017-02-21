@@ -103,7 +103,7 @@ int getPhysicalSize() {
         }
         ards++;
     }
-    printf("total: %x", total);
+//    printf("total: %x", total);
 
 }
 
@@ -113,7 +113,7 @@ void systask() {
     memset(&message, 0, sizeof(Message));
     u32 side;
     last = 0;
-    getPhysicalSize();
+//    getPhysicalSize();
     while (1) {
 
         memset(&message, 0, sizeof(Message));

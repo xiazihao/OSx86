@@ -8,6 +8,7 @@
 #include <type.h>
 #include <process.h>
 #include <hd.h>
+#include <usr.h>
 
 MessageChain messageQueue[QUEUESIZE];
 
@@ -235,21 +236,23 @@ typedef struct {
 
 void testA() {
     u8 buf[512];
-    Message msg;
-    msg.type = DEV_OPEN;
-    msg.msg2.m2i1 = 512;
-    msg.msg2.m2p3 = buf;
-    sendmessage(0, PID_HD, &msg);
     Entry *entry = &buf[0x1BE];
     char t = "hello";
-
+    read_hd(buf, 512, 0, 0);
+    printf("read");
+    buf[0] = 'h';
+    buf[1] = 'e';
+    buf[2] = 0;
+    write_hd(buf, 512, 0, 4);
+    read_hd(buf, 512, 0, 4);
     while (1) {
 //        while (receivemessage(RECEIVE, ANY, &msg));
-//        printf("receive sector");
-//        printf("sys id: %x\n", entry->sysId);
-//        entry++;
-//        printf("sys id: %x\n",entry->sysId);
-//        printf("%s",buf);
+        printf("\nreceive sector\n");
+        printf("sys id: %x\n", entry->sysId);
+        entry++;
+        printf("sys id: %x\n", entry->sysId);
+        printf("buf:%s", buf);
+        while (1);
         wait(10000);
 //        printf("A:%d  ", getTicks());
     }

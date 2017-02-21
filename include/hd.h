@@ -43,6 +43,7 @@ typedef struct {
 
 #define ATA_IDENTIFY        0xEC
 #define ATA_READ            0x20
+#define ATA_WRITE		    0x30
 
 #define DEV_OPEN    1
 #define DEV_CLOSE   2
@@ -59,7 +60,12 @@ typedef struct {
 #define REG_LBAHIGH     0x1F5
 #define REG_DEVICE      0x1F6
 #define REG_STATUS      0x1F7
+
 #define STATUS_BUSY     0x80
+#define STATUS_DRDY     1<<6
+#define STATUS_DRQ      0x08//data request
+
+#define TIMEOUT         100000
 
 #define REG_CMD         REG_STATUS
 

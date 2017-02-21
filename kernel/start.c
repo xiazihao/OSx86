@@ -12,8 +12,8 @@ void initPage();
  * prepare gdtr, idtr, idt, should be called very early
  */
 void cstart() {
-    disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-                     "-----\"cstart\" begins-----\n");
+//    disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+//                     "-----\"cstart\" begins-----\n");
     memcpy(&gdt, (void *) (*((u32 *) (&gdt_ptr[2]))), *((u16 *) (&gdt_ptr[0])) + 1);
     u16 *p_gdt_limit = (u16 *) (&gdt_ptr[0]);
     u32 *p_gdt_base = (u32 *) (&gdt_ptr[2]);
@@ -39,8 +39,8 @@ typedef struct {
 
 void initPage() {
     unsigned int total = 0;
-    int *num = 0x91000;
-    ARDS *ards = 0x91010;
+    int *num = (int *) 0x91000;
+    ARDS *ards = (ARDS *) 0x91010;
     for (int i = 0; i < *num; ++i) {
         if (ards->type == 1) {
             total += ards->lengthLow;
@@ -48,15 +48,15 @@ void initPage() {
         ards++;
     }
     unsigned int temp = 0x1ef0000 / 0x1000 / 0x1000 + 1;
-    u32 *PageDirBase = PAGEDIRBASE;
+    u32 *PageDirBase = (u32 *) PAGEDIRBASE;
     // init page director
     for (int i = 0; i < 1024; ++i) {
-        *PageDirBase = (PAGETABLEBASE + i * 4096) | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U;
+        *PageDirBase = (u32) ((PAGETABLEBASE + i * 4096) | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U);
         PageDirBase++;
     }
-    u32 *PageTableBase = PAGETABLEBASE;
+    u32 *PageTableBase = (u32 *) PAGETABLEBASE;
     for (int j = 0; j < 1024 * temp; ++j) {
-        *PageTableBase = j * 4096 | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U;
+        *PageTableBase = (u32) (j * 4096 | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U);
         PageTableBase++;
     }
 }

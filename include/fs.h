@@ -31,7 +31,7 @@ typedef struct s_super_block {
     int super_block_device;
 } SuperBlock;
 
-#define (SUPER_BLOCK_SIZE sizeof(SuperBlock) - sizeof(int))
+#define SUPER_BLOCK_SIZE (sizeof(SuperBlock) - sizeof(int))
 
 typedef struct s_inode {
     u32 i_mode;
@@ -50,14 +50,6 @@ typedef struct s_inode {
 /**
  *
  */
-typedef struct {
-    u32 magic;
-    u32 nr_inode;
-    u32 nr_sects;
-    u32 nr_imap_sects;
-    u32 nr_smap_sects;
-    u32 n_1st_sect;
-} SuperBlock;
 
 typedef struct {
     u32 driver_nr;

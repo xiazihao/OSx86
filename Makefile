@@ -20,7 +20,7 @@ OBJS:=build/kernel.o build/start.o build/global.o build/kliba.o \
 	build/string.o build/klib.o build/i8259.o build/protect.o \
 	build/main.o build/clock.o build/syscall.o build/process.o \
 	build/keyboard.o build/tty.o build/console.o build/printf.o build/vsprintf.o \
-	build/systask.o build/misc.o build/hd.o
+	build/systask.o build/misc.o build/hd.o build/usr.o
 .PHONY : everything
 
 # everything : $(BOOT_BIN) $(LDR_BIN) $(KERNEL_BIN)
@@ -111,4 +111,7 @@ build/systask.o:kernel/systask.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<
 
 build/hd.o:kernel/hd.c $(INCLUDE_PATH)/*
+	gcc $(GCCFLG) -o $@ $<
+
+build/usr.o:kernel/usr.c $(INCLUDE_PATH)/*
 	gcc $(GCCFLG) -o $@ $<

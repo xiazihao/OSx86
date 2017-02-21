@@ -35,7 +35,7 @@ struct msg1 {
 struct msg2 {
     int m2i1;
     int m2i2;
-    void *m2p3;
+    int m2i3;
     void *m2p4;
 };
 
@@ -118,7 +118,7 @@ void schedule();
 
 void initQueue();
 
-void * virtual2Linear(u32 pid, void *virtual);
+void *virtual2Linear(u32 pid, void *virtual);
 
 #define STACK_SIZE_TESTA    0x8000
 #define STACK_SIZE_TESTB    0x8000

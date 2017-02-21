@@ -19,38 +19,70 @@ static u8 hd_status;
 static u8 hdbuf[SECTOR_SIZE * 2];
 static HdInformation hdInfo[1];
 
-static void hdOpen(int device);
+static void open(int device);
 
 static void partition();
 
-static void initHardDrive();
+static void init_hard_drive();
 
-static int waitFor(int mask, int value, int timeout);
+static int wait_for(int mask, int value, int timeout);
 
 void print_identify_info(u16 *hdinfo);
 
-void readSector(int drive, int sect_nr, void *buf, int size);
+//void readSector(int drive, int sect_nr, void *buf, int size);
 
-static void interruptWait();
+static void interrupt_wait();
 
-static void commandOut(HdCmd *hdcmd);
+static void command_out(HdCmd *hdcmd);
 
-static void hdRead(void *addr, u32 sender, int bufsize);
+//static void hdRead(void *addr, u32 sender, int bufsize);
 
-void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num);
+void get_part_table(int drive, int sect_nr, PartitionEntry *partEntry, int num);
 
 void hd_handler(int irq);
 
-static void printPartitionTable();
+static void print_partition_table();
+
+static void read(void *addr, int bufsize, int sector, int drive);
+
+static void hd_write(void *addr, int bufsize, int sector, int drive);
+
+void task_hd() {
+    Message msg;
+    init_hard_drive();
+    receivemessage(INFORM, ANY, &msg);
+    while (TRUE) {
+        while (receivemessage(RECEIVE, ANY, &msg));
+        switch (msg.type) {
+            case DEV_OPEN:
+//                printf("get open");
+                open(0);
+//                while (1);
+                break;
+            case DEV_READ:
+                // m2i1:bufsize     m2i2:secotr     m2i3:drive   m2p4:address
+                read(virtual2Linear(msg.sender, msg.msg2.m2p4), msg.msg2.m2i1, msg.msg2.m2i2, msg.msg2.m2i3);
+//                hdRead(msg.msg2.m2p3, msg.sender, msg.msg2.m2i1);
+                sendmessage(0, msg.sender, &msg);
+                break;
+            case DEV_WRITE:
+                printf("write");
+                // m2i1:bufsize     m2i2:secotr     m2i3:drive   m2p4:address
+                hd_write(virtual2Linear(msg.sender, msg.msg2.m2p4), msg.msg2.m2i1, msg.msg2.m2i2, msg.msg2.m2i3);
+                sendmessage(0, msg.sender, &msg);
+                break;
+        }
+    }
+}
 
 /**
  * Init hard drive: get drive nubmer; set hard drive interrupt handler; enable hard drive handler;
  * init hard drive information structure
  * It should be firstly call before every operation about hard drive
  */
-static void initHardDrive() {
+static void init_hard_drive() {
     u8 *pNrDrives = (u8 *) (0x475);
-    printf("NrDrives:%d.\n", *pNrDrives);
+//    printf("NrDrives:%d.\n", *pNrDrives);
     assert(*pNrDrives);
     putIrqHandler(AT_WINI_IRQ, hd_handler);
     enable_irq(CASCADE_IRQ);
@@ -63,12 +95,12 @@ static void hd_identify(int drive) {
     HdCmd cmd;
     cmd.device = MAKE_DEVICE_REG(0, drive, 0);
     cmd.command = ATA_IDENTIFY;
-    commandOut(&cmd);
-    interruptWait();
+    command_out(&cmd);
+    interrupt_wait();
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
-    print_identify_info((u16 *) hdbuf);
+//    print_identify_info((u16 *) hdbuf);
 //    partition();
-//    printPartitionTable();
+//    print_partition_table();
 }
 
 void print_identify_info(u16 *hdinfo) {
@@ -108,8 +140,8 @@ void print_identify_info(u16 *hdinfo) {
  * Output command to hard drive controller
  * @param hdcmd  command struct
  */
-static void commandOut(HdCmd *hdcmd) {
-    if (waitFor(STATUS_BUSY, 0, 10000)) {
+static void command_out(HdCmd *hdcmd) {
+    if (wait_for(STATUS_BUSY, 0, TIMEOUT)) {
         printf("hd error");
         while (1);
     }
@@ -135,9 +167,9 @@ static void commandOut(HdCmd *hdcmd) {
  * @param timeout timeout time
  * @return 0:success 1:timeout
  */
-static int waitFor(int mask, int value, int timeout) {
+static int wait_for(int mask, int value, int timeout) {
     int t = getTicks();
-    assert(value == 0 || value == 1);
+//    assert(value == 0 || value == 1);
     while ((getTicks() - t) * 1000 / HZ < timeout) {
         if ((in_byte(REG_STATUS) & mask) == value) {
             return 0;
@@ -149,32 +181,13 @@ static int waitFor(int mask, int value, int timeout) {
 /**
  * Block until hard drive intterupt occur
  */
-static void interruptWait() {
+static void interrupt_wait() {
     receivemessage(INFORM, ANY, NULL);
     while (receivemessage(INT, ANY, NULL));
 }
 
-void task_hd() {
-    Message msg;
-    initHardDrive();
-    receivemessage(INFORM, ANY, &msg);
-    while (TRUE) {
-        while (receivemessage(RECEIVE, ANY, &msg));
-        switch (msg.type) {
-            case DEV_OPEN:
-//                printf("get open");
-                hdOpen(0);
-//                while (1);
-                break;
-            case DEV_READ:
-                hdRead(msg.msg2.m2p3, msg.sender, msg.msg2.m2i1);
-                sendmessage(0, msg.sender, &msg);
-                break;
-        }
-    }
-}
 
-static void printPartitionTable() {
+static void print_partition_table() {
     Process *p = &process_table[0];
     printf("%s", p->name);
     for (int i = 0; i < 10; ++i) {
@@ -195,7 +208,7 @@ static void printPartitionTable() {
  */
 static void partition() {
     PartitionEntry partitionBuf[4];
-    getPartTable(0, 0, partitionBuf, NR_PRIMARY_PART_PER_DRIVE);
+    get_part_table(0, 0, partitionBuf, NR_PRIMARY_PART_PER_DRIVE);
     memcpy(&hdInfo[0].partitionInformation[0].partitionBasic, &partitionBuf[0], sizeof(PartitionEntry));
     memcpy(&hdInfo[0].partitionInformation[1].partitionBasic, &partitionBuf[1], sizeof(PartitionEntry));
     memcpy(&hdInfo[0].partitionInformation[2].partitionBasic, &partitionBuf[2], sizeof(PartitionEntry));
@@ -213,7 +226,7 @@ static void partition() {
             u32 baseSector = hdInfo[0].partitionInformation[i].partitionBasic.startSectorFromStart;
             u32 startSector = hdInfo[0].partitionInformation[i].partitionBasic.startSectorFromStart;
             do {
-                getPartTable(0, startSector, partitionBuf, 2);
+                get_part_table(0, startSector, partitionBuf, 2);
                 memcpy(&hdInfo[0].partitionInformation[temp].partitionBasic, partitionBuf, sizeof(PartitionEntry));
 
                 hdInfo[0].partitionInformation[temp].name[0] = 'h';
@@ -238,18 +251,19 @@ static void partition() {
  * @param partEntry address which receive partition information
  * @param num max items of partition information
  */
-void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num) {
-    HdCmd hdcmd;
-    hdcmd.features = 0;
-    hdcmd.count = 1;
-    hdcmd.lba_low = (u8) (sect_nr & 0xff);
-    hdcmd.lba_mid = (u8) ((sect_nr >> 8) & 0xff);
-    hdcmd.lba_high = (u8) ((sect_nr >> 16) & 0xff);
-    hdcmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
-    hdcmd.command = ATA_READ;
-    commandOut(&hdcmd);
-    interruptWait();
-    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
+void get_part_table(int drive, int sect_nr, PartitionEntry *partEntry, int num) {
+    read(hdbuf, SECTOR_SIZE, sect_nr, drive);
+//    HdCmd hdcmd;
+//    hdcmd.features = 0;
+//    hdcmd.count = 1;
+//    hdcmd.lba_low = (u8) (sect_nr & 0xff);
+//    hdcmd.lba_mid = (u8) ((sect_nr >> 8) & 0xff);
+//    hdcmd.lba_high = (u8) ((sect_nr >> 16) & 0xff);
+//    hdcmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
+//    hdcmd.command = ATA_READ;
+//    command_out(&hdcmd);
+//    interrupt_wait();
+//    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
     memcpy(partEntry, hdbuf + PARTITION_TABLE_OFFSET, sizeof(PartitionEntry) * num);
 }
 
@@ -262,34 +276,63 @@ void readSector(int drive, int sect_nr, void *buf, int size) {
     hdCmd.lba_high = (u8) ((sect_nr >> 16) & 0xFF);
     hdCmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
     hdCmd.command = ATA_READ;
-    commandOut(&hdCmd);
-    interruptWait();
+    command_out(&hdCmd);
+    interrupt_wait();
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
     memcpy(buf, hdbuf, size);
 }
 
 /**
- *
+ * Handle DEV_OPEN
  * @param device
  */
-static void hdOpen(int device) {
+static void open(int device) {
     assert(device == 0);
     hd_identify(device);
     if (hdInfo[device].open_count == 0) {
         partition();
-        printPartitionTable();
+//        print_partition_table();
     }
     hdInfo[device].open_count++;
 }
 
-static void hdRead(void *addr, u32 sender, int bufsize) {
-    hdOpen(0);
-    void *dest = virtual2Linear(sender, addr);
-    readSector(0, 0, dest, bufsize);
-    *(char *) dest = 'c';
-    *(char *) (dest + 1) = 0;
-    printf("buf size:%d\n", bufsize);
-//    printf("get %s", (char *) dest);
+static void hd_write(void *addr, int bufsize, int sector, int drive) {
+    if (wait_for(STATUS_DRDY, STATUS_DRDY, TIMEOUT)) {
+        assert(0);
+    }
+    HdCmd hdCmd;
+    hdCmd.features = 0;
+    hdCmd.count = 1;
+    hdCmd.lba_low = (u8) (sector & 0xFF);
+    hdCmd.lba_mid = (u8) ((sector >> 8) & 0xFF);
+    hdCmd.lba_high = (u8) ((sector >> 16) & 0xFF);
+    hdCmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sector >> 24) & 0xf));
+    hdCmd.command = ATA_WRITE;
+    command_out(&hdCmd);
+    port_write(REG_DATA, hdbuf, SECTOR_SIZE);
+    interrupt_wait();
+}
+
+/**
+ * Handle DEV_READ
+ * @param addr
+ * @param bufsize
+ * @param sector
+ * @param drive
+ */
+static void read(void *addr, int bufsize, int sector, int drive) {
+    HdCmd hdCmd;
+    hdCmd.features = 0;
+    hdCmd.count = 1;
+    hdCmd.lba_low = (u8) (sector & 0xFF);
+    hdCmd.lba_mid = (u8) ((sector >> 8) & 0xFF);
+    hdCmd.lba_high = (u8) ((sector >> 16) & 0xFF);
+    hdCmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sector >> 24) & 0xf));
+    hdCmd.command = ATA_READ;
+    command_out(&hdCmd);
+    interrupt_wait();
+    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
+    memcpy(addr, hdbuf, bufsize);
 }
 
 /**
