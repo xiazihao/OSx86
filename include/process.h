@@ -32,13 +32,19 @@ struct msg1 {
     int m1i3;
     int m1i4;
 };
-
+struct msg2 {
+    int m2i1;
+    int m2i2;
+    void *m2p3;
+    void *m2p4;
+};
 
 typedef struct s_message {
     int type;
     u32 sender;
     union {
         struct msg1 msg1;
+        struct msg2 msg2;
     };
 } Message;
 
@@ -111,6 +117,8 @@ int informInterrupt(u32 handlerPid);
 void schedule();
 
 void initQueue();
+
+void * virtual2Linear(u32 pid, void *virtual);
 
 #define STACK_SIZE_TESTA    0x8000
 #define STACK_SIZE_TESTB    0x8000

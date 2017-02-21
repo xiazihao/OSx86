@@ -38,6 +38,15 @@ int vsprintf(char *buf, const char *format, va_list args) {
                 p_next_arg += 4;
                 p += strlen(temp);
                 break;
+            case 'c':
+//                int2str(temp, *((int *) p_next_arg));
+//                strcpy(p, temp);
+//                p_next_arg += 4;
+//                p += strlen(temp);
+////                *p = *(char*)p_next_arg;
+////                p++;
+//                p_next_arg += 1;
+                break;
             default:
                 break;
         }

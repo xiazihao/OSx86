@@ -38,6 +38,9 @@ typedef struct {
     PartitionExtent partitionInformation[16];
     int open_count;
 } HdInformation;
+
+#define SECTOR_SIZE     512
+
 #define ATA_IDENTIFY        0xEC
 #define ATA_READ            0x20
 
@@ -63,14 +66,40 @@ typedef struct {
 #define REG_DEVICECONTROL   0x3F6
 #define REG_ALTSTATUS   REG_DEVICECONTROL
 
-
+/**
+ * Max accepted hard drive number
+ */
 #define MAX_DRIVERS     2
-#define NR_PART_PER_DRIVE   4
-#define NR_SUB_PER_PART     16
-#define NR_SUB_PER_DRIVE    (NR_PART_PER_DRIVE + NR_SUB_PER_PART)
-#define NR_PRIM_PER_DRIVE   (NR_PART_PER_DRIVE + 1)
-#define MAX_PRIM    (MAX_DRIVES * NR_PRIM_PER_DRIVE - 1)
-#define MAX_SUBPARTITIONS   (NR_SUB_PER_DRIVE * MAX_DRIVES)
+
+/**
+ * Max number of primary part per drive
+ */
+#define NR_PRIMARY_PART_PER_DRIVE   4
+
+/**
+ * Max logical part per primary part
+ */
+#define NR_LOGICAL_PART_PER_PART     16
+
+/**
+ * Max number of logical per drive
+ */
+#define NR_LOGICAL_PART_PER_DRIVE    (NR_PRIMARY_PART_PER_DRIVE * NR_LOGICAL_PART_PER_PART)
+
+/**
+ * Total number of primary part per drive, 0 is the whole drive
+ */
+#define NR_PRIMARY_PER_DRIVE   (NR_PRIMARY_PART_PER_DRIVE + 1)
+
+/**
+ * The index of primary base of all of drive, count begin with 0
+ */
+#define MAX_PRIMARY    (MAX_DRIVES * NR_PRIMARY_PER_DRIVE - 1)
+
+/**
+ * Max number of logical part of all of drive
+ */
+#define MAX_SUBPARTITIONS   (NR_LOGICAL_PART_PER_DRIVE * MAX_DRIVES)
 
 
 #define    PARTITION_TABLE_OFFSET    0x1BE

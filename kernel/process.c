@@ -209,19 +209,47 @@ static int physicCopy(void *dest, void *src, int size) {
     }
 }
 
+void *virtual2Linear(u32 pid, void *virtual) {
+    assert(pid >= 0 && pid < NR_TASKS + NR_CONSOLES);
+    Descriptor *descriptor = &(process_table[pid].ldts[INDEX_LDT_RW]);
+    return (descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24) + (u32) virtual;
+
+}
 
 static u32 getPid(Process *process) {
     return process->pid;
 }
 
-void testA() {
+typedef struct {
+    u8 status;//0x80 active part, 0x00 inactive part
+    u8 startHead;
+    u8 startSector;//0 - 5 bits
+    u8 startCylinder;//6 - 7 and all
+    u8 sysId;
+    u8 endHead;
+    u8 endSector;//0 - 5
+    u8 endCylinder;//6 - 7 and all
+    u32 startSectorFromStart;
+    u32 sectorCount;
+} Entry;
 
+void testA() {
+    u8 buf[512];
     Message msg;
     msg.type = DEV_OPEN;
+    msg.msg2.m2i1 = 512;
+    msg.msg2.m2p3 = buf;
     sendmessage(0, PID_HD, &msg);
+    Entry *entry = &buf[0x1BE];
+    char t = "hello";
 
     while (1) {
-
+//        while (receivemessage(RECEIVE, ANY, &msg));
+//        printf("receive sector");
+//        printf("sys id: %x\n", entry->sysId);
+//        entry++;
+//        printf("sys id: %x\n",entry->sysId);
+//        printf("%s",buf);
         wait(10000);
 //        printf("A:%d  ", getTicks());
     }

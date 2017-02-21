@@ -14,7 +14,7 @@
                           ((drv) << 4) |        \
                           (lba_highest & 0xF) | 0xA0)
 
-#define SECTOR_SIZE     512
+
 static u8 hd_status;
 static u8 hdbuf[SECTOR_SIZE * 2];
 static HdInformation hdInfo[1];
@@ -29,9 +29,13 @@ static int waitFor(int mask, int value, int timeout);
 
 void print_identify_info(u16 *hdinfo);
 
+void readSector(int drive, int sect_nr, void *buf, int size);
+
 static void interruptWait();
 
 static void commandOut(HdCmd *hdcmd);
+
+static void hdRead(void *addr, u32 sender, int bufsize);
 
 void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num);
 
@@ -162,6 +166,10 @@ void task_hd() {
                 hdOpen(0);
 //                while (1);
                 break;
+            case DEV_READ:
+                hdRead(msg.msg2.m2p3, msg.sender, msg.msg2.m2i1);
+                sendmessage(0, msg.sender, &msg);
+                break;
         }
     }
 }
@@ -187,12 +195,12 @@ static void printPartitionTable() {
  */
 static void partition() {
     PartitionEntry partitionBuf[4];
-    getPartTable(0, 0, partitionBuf, NR_PART_PER_DRIVE);
+    getPartTable(0, 0, partitionBuf, NR_PRIMARY_PART_PER_DRIVE);
     memcpy(&hdInfo[0].partitionInformation[0].partitionBasic, &partitionBuf[0], sizeof(PartitionEntry));
     memcpy(&hdInfo[0].partitionInformation[1].partitionBasic, &partitionBuf[1], sizeof(PartitionEntry));
     memcpy(&hdInfo[0].partitionInformation[2].partitionBasic, &partitionBuf[2], sizeof(PartitionEntry));
     memcpy(&hdInfo[0].partitionInformation[3].partitionBasic, &partitionBuf[3], sizeof(PartitionEntry));
-    int temp = NR_PART_PER_DRIVE;
+    int temp = NR_PRIMARY_PART_PER_DRIVE;
     for (int i = 0; i < 4; ++i) {
         if (hdInfo[0].partitionInformation[i].partitionBasic.sysId != 0) {
             hdInfo[0].partitionInformation[i].name[0] = 'h';
@@ -245,6 +253,21 @@ void getPartTable(int drive, int sect_nr, PartitionEntry *partEntry, int num) {
     memcpy(partEntry, hdbuf + PARTITION_TABLE_OFFSET, sizeof(PartitionEntry) * num);
 }
 
+void readSector(int drive, int sect_nr, void *buf, int size) {
+    HdCmd hdCmd;
+    hdCmd.features = 0;
+    hdCmd.count = 1;
+    hdCmd.lba_low = (u8) (sect_nr & 0xFF);
+    hdCmd.lba_mid = (u8) ((sect_nr >> 8) & 0xFF);
+    hdCmd.lba_high = (u8) ((sect_nr >> 16) & 0xFF);
+    hdCmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
+    hdCmd.command = ATA_READ;
+    commandOut(&hdCmd);
+    interruptWait();
+    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
+    memcpy(buf, hdbuf, size);
+}
+
 /**
  *
  * @param device
@@ -257,6 +280,16 @@ static void hdOpen(int device) {
         printPartitionTable();
     }
     hdInfo[device].open_count++;
+}
+
+static void hdRead(void *addr, u32 sender, int bufsize) {
+    hdOpen(0);
+    void *dest = virtual2Linear(sender, addr);
+    readSector(0, 0, dest, bufsize);
+    *(char *) dest = 'c';
+    *(char *) (dest + 1) = 0;
+    printf("buf size:%d\n", bufsize);
+//    printf("get %s", (char *) dest);
 }
 
 /**
