@@ -7,6 +7,9 @@
 
 #include "type.h"
 #include "const.h"
-void initClock();
-void clockHandler(int irq);
+
+void init_clock();
+
+void clock_handler(int irq);
+
 #endif //CHP6_CLOCK_H

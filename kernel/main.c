@@ -66,11 +66,11 @@ void kernel_main() {
     p_proc_ready = process_table;
     k_reenter = 0;
 
-    initQueue();
-    initClock();
+    init_queue();
+    init_clock();
     ticks = 0;
 //    printf("test");
-//    getPhysicalSize();
+//    get_physical_size();
     restart();//last function any sentence after that will not be matched
     while (1) {}
 

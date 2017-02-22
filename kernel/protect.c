@@ -76,7 +76,7 @@ void hwint15();
 /**
  * Init interrupt descriptor
  */
-void initProtect() {
+void init_protect() {
     init_8259A();
     init_idt_desc(INT_VECTOR_DIVIDE, DA_386IGate, divide_error, PRIVILEGE_KRNL);
 

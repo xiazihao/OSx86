@@ -9,6 +9,7 @@
 //
 static int up();
 
+int get_physical_size();
 
 typedef struct s_waitQueue {
     int ticks;
@@ -90,10 +91,10 @@ typedef struct {
     u32 type;
 } ARDS;
 
-int getPhysicalSize() {
+int get_physical_size() {
     unsigned int total = 0;
-    unsigned int *num =(unsigned int *) 0x91000;
-    ARDS *ards = (ARDS*)0x91010;
+    unsigned int *num = (unsigned int *) 0x91000;
+    ARDS *ards = (ARDS *) 0x91010;
     printf("number: %d \n", *num);
     for (int i = 0; i < *num; ++i) {
         printf("baselow: %x,basehight: %x, lengthlow: %x, lengthhigh: %x, type: %d\n", ards->baseLow, ards->baseHigh,
@@ -113,7 +114,7 @@ void systask() {
     memset(&message, 0, sizeof(Message));
     u32 side;
     last = 0;
-//    getPhysicalSize();
+//    get_physical_size();
     while (1) {
 
         memset(&message, 0, sizeof(Message));
@@ -153,36 +154,6 @@ void systask() {
 
 }
 
-int wait(int millsec) {
-    Message message;
-    receivemessage(INFORM, ANY, NULL);
-    memset(&message, 0, sizeof(Message));
-    message.type = SYSWAIT;
-    message.msg1.m1i1 = millsec;
-    if (!sendmessage(RECEIVE, PID_SYSTASK, &message)) {
-        while (receivemessage(0, PID_SYSTASK, &message));
-        if (message.msg1.m1i1) {
-            return 1;
-        }
-        return 0;
-    }
-    return 1; // send faild
-}
 
-/**
- * System call function, get ticks from start of os.
- * @return return 0: get ticks failed
- */
-int getTicks() {
-    Message message;
-    receivemessage(INFORM, ANY, NULL);
-    memset(&message, 0, sizeof(Message));
-    message.type = SYSGETTICKS;
-    if (!sendmessage(RECEIVE, PID_SYSTASK, &message)) {
-        while (receivemessage(RECEIVE, PID_SYSTASK, &message));
-        return message.msg1.m1i1;
-    }
-    return 0;
-}
 
 

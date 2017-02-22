@@ -6,7 +6,7 @@
 #include "global.h"
 #include <page.h>
 
-void initPage();
+void init_page();
 
 /**
  * prepare gdtr, idtr, idt, should be called very early
@@ -24,8 +24,8 @@ void cstart() {
     u32 *p_idt_base = (u32 *) (&idt_ptr[2]);
     *p_idt_limit = IDT_SIZE * sizeof(Gate) - 1;
     *p_idt_base = (u32) &idt;
-    initProtect();
-    initPage();
+    init_protect();
+    init_page();
 //    disp_str("-----\"cstart\" ends-----\n");
 }
 
@@ -37,7 +37,7 @@ typedef struct {
     u32 type;
 } ARDS;
 
-void initPage() {
+void init_page() {
     unsigned int total = 0;
     int *num = (int *) 0x91000;
     ARDS *ards = (ARDS *) 0x91010;
@@ -48,15 +48,15 @@ void initPage() {
         ards++;
     }
     unsigned int temp = 0x1ef0000 / 0x1000 / 0x1000 + 1;
-    u32 *PageDirBase = (u32 *) PAGEDIRBASE;
+    u32 *page_dir_base = (u32 *) PAGEDIRBASE;
     // init page director
     for (int i = 0; i < 1024; ++i) {
-        *PageDirBase = (u32) ((PAGETABLEBASE + i * 4096) | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U);
-        PageDirBase++;
+        *page_dir_base = (u32) ((PAGETABLEBASE + i * 4096) | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U);
+        page_dir_base++;
     }
-    u32 *PageTableBase = (u32 *) PAGETABLEBASE;
+    u32 *page_table_base = (u32 *) PAGETABLEBASE;
     for (int j = 0; j < 1024 * temp; ++j) {
-        *PageTableBase = (u32) (j * 4096 | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U);
-        PageTableBase++;
+        *page_table_base = (u32) (j * 4096 | PAGE_PRESENT | PAGE_RW_W | PAGE_US_U);
+        page_table_base++;
     }
 }

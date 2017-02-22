@@ -1,6 +1,7 @@
 #include <hd.h>
 #include <proto.h>
 #include <systask.h>
+#include <lib.h>
 
 //
 // Created by xiazihao on 17-2-21.
@@ -27,4 +28,36 @@ int write_hd(void *buf, int bufsize, int drive, int sector) {
     message.msg2.m2p4 = buf;
     sendmessage(0, PID_HD, &message);
     while (receivemessage(RECEIVE, ANY, &message));
+}
+
+int wait(int millsec) {
+    Message message;
+    receivemessage(INFORM, ANY, NULL);
+    memset(&message, 0, sizeof(Message));
+    message.type = SYSWAIT;
+    message.msg1.m1i1 = millsec;
+    if (!sendmessage(RECEIVE, PID_SYSTASK, &message)) {
+        while (receivemessage(0, PID_SYSTASK, &message));
+        if (message.msg1.m1i1) {
+            return 1;
+        }
+        return 0;
+    }
+    return 1; // send faild
+}
+
+/**
+ * System call function, get ticks from start of os.
+ * @return return 0: get ticks failed
+ */
+int get_ticks() {
+    Message message;
+    receivemessage(INFORM, ANY, NULL);
+    memset(&message, 0, sizeof(Message));
+    message.type = SYSGETTICKS;
+    if (!sendmessage(RECEIVE, PID_SYSTASK, &message)) {
+        while (receivemessage(RECEIVE, PID_SYSTASK, &message));
+        return message.msg1.m1i1;
+    }
+    return 0;
 }

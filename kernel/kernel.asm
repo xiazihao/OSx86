@@ -13,7 +13,7 @@ EXTERN p_proc_ready
 EXTERN kernel_main
 EXTERN disp_str
 EXTERN k_reenter
-EXTERN clockHandler
+EXTERN clock_handler
 EXTERN irq_table
 
 section .bss

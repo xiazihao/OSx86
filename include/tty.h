@@ -18,9 +18,9 @@ typedef struct s_tty {
     struct s_console *p_console;
 } TTY;
 
-void inProcess(TTY *p_tty, u32 key);
+void in_process(TTY *p_tty, u32 key);
 
-void ttyWrite(TTY *p_tty, char *buf, int len);
+void tty_write(TTY *p_tty, char *buf, int len);
 
 #define MAG_CH_PANIC	'\002'
 #define MAG_CH_ASSERT	'\003'

@@ -39,10 +39,10 @@ typedef struct s_console {
 
 void initScreen(TTY *p_tty);
 
-void outChar(Console *p_console, char ch);
+void out_char(Console *p_console, char ch);
 
-void selectConsole(int nr_console);
+void select_console(int nr_console);
 
-void scrollScreen(Console *p_console, int direction);
+void scroll_screen(Console *p_console, int direction);
 
 #endif //CHP6_CONSOLE_H

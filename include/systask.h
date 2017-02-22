@@ -11,8 +11,6 @@
 #define PID_SYSTASK     1
 #define PID_HD          2
 
-int wait(int millsec);
 
-int getTicks();
 
 #endif //CHP6_SYSTASK_H

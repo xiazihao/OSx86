@@ -116,10 +116,10 @@ typedef struct s_kb {
     char buf[KB_IN_BYTES];
 } KB_INPUT;
 
-void KeyboardHandler(int irq);
+void keyboard_handler(int irq);
 
-void initKeyboard();
+void init_keyboard();
 
-void keyboardRead(TTY *p_tty);
+void keyboard_read(TTY *p_tty);
 
 #endif //CHP6_KEYBOARD_H

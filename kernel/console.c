@@ -11,7 +11,7 @@ static void set_cursor(unsigned int position);
 
 static void set_video_start_addr(u32 addr);
 
-void outChar(Console *p_console, char ch) {
+void out_char(Console *p_console, char ch) {
     volatile u8 *p_vmem = (u8 *) (V_MEM_BASE + p_console->cursor * 2);
     switch (ch) {
         case '\n':
@@ -48,7 +48,7 @@ void outChar(Console *p_console, char ch) {
             break;
     }
     while (p_console->cursor >= p_console->current_start_addr + SCREEN_SIZE) {
-        scrollScreen(p_console, SCR_DN);
+        scroll_screen(p_console, SCR_DN);
     }
 
 //    set_cursor(p_console->cursor);
@@ -72,9 +72,9 @@ void initScreen(TTY *p_tty) {
 //        p_tty->p_console->cursor = disp_pos / 2;
 //        disp_pos = 0;
 //    } else {
-        outChar(p_tty->p_console, nr_tty + '0');
-        outChar(p_tty->p_console, '#');
-        outChar(p_tty->p_console, '\n');
+    out_char(p_tty->p_console, nr_tty + '0');
+    out_char(p_tty->p_console, '#');
+    out_char(p_tty->p_console, '\n');
 
 //    }
     set_cursor(p_tty->p_console->cursor);
@@ -89,7 +89,7 @@ static void set_cursor(unsigned int position) {
     enable_int();
 }
 
-void selectConsole(int nr_console) {
+void select_console(int nr_console) {
     if (nr_console < 0 || nr_console >= NR_CONSOLES) {
         return;
     }
@@ -108,7 +108,7 @@ static void set_video_start_addr(u32 addr) {
     enable_int();
 }
 
-void scrollScreen(Console *p_console, int direction) {
+void scroll_screen(Console *p_console, int direction) {
     if (direction == SCR_UP) {
         if (p_console->current_start_addr > p_console->original_addr) {
             p_console->current_start_addr -= SCREEN_WIDTH;

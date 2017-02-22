@@ -8,4 +8,9 @@
 int read_hd(void *buf, int bufsize, int drive, int sector);
 
 int write_hd(void *buf, int bufsize, int drive, int sector);
+
+int wait(int millsec);
+
+int get_ticks();
+
 #endif //OSX86_USR_H

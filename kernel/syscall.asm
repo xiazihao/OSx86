@@ -12,7 +12,7 @@ GLOBAL sendmessage
 GLOBAL receivemessage
 BITS 32
 section .text
-; getTicks:
+; get_ticks:
 ; 	mov eax,_NR_get_ticks
 ; 	int INT_VECTOR_SYS_CALL
 ; 	ret

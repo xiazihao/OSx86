@@ -128,5 +128,5 @@ typedef struct s_tss
 #define INDEX_LDT_C             0
 #define INDEX_LDT_RW            1
 
-void initProtect();
+void init_protect();
 #endif

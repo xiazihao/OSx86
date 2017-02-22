@@ -12,11 +12,11 @@
 
 MessageChain messageQueue[QUEUESIZE];
 
-static u32 getPid(Process *process);
+static u32 get_pid(Process *process);
 
-static int physicCopy(void *dest, void *src, int size);
+static int physic_copy(void *dest, void *src, int size);
 
-static u32 getLinearAddr(Process *process, void *virtual_addr);
+static u32 get_linear_addr(Process *process, void *virtual_addr);
 
 static MessageChain *getQueuePosition();
 
@@ -38,7 +38,7 @@ static MessageChain *getQueuePosition() {
  * @param handlerPid  the interrupt handler process' pid
  * @return
  */
-int informInterrupt(u32 handlerPid) {
+int inform_interrupt(u32 handlerPid) {
     assert(handlerPid < NR_PROCS + NR_TASKS - 1);
     Process *process = &process_table[handlerPid];
 //    if (process->receivefrom == INTERRUPT || process->receivefrom == ANY) {
@@ -66,7 +66,7 @@ void schedule() {
 /**
  * Init message queue.
  */
-void initQueue() {
+void init_queue() {
     for (int i = 0; i < QUEUESIZE; ++i) {
         memset(&messageQueue[i], 0, sizeof(MessageChain));
     }
@@ -81,7 +81,7 @@ void initQueue() {
  * @return 0:send message success, 1:destination refuse to receive, 2:no enough empty message queue...
  */
 int sys_sendmessage(Process *process, int function, int dest, Message *message) {
-    assert(getPid(process) != dest);
+    assert(get_pid(process) != dest);
     assert(dest < NR_PROCS + NR_TASKS);
     MessageChain *temp;
     Process *sender = process;
@@ -98,7 +98,7 @@ int sys_sendmessage(Process *process, int function, int dest, Message *message) 
             receiver->queue.last = receiver->queue.start;
             receiver->queue.count++;
             assert(receiver->queue.count == 1);
-            physicCopy(&receiver->queue.start->message, (void *) getLinearAddr(sender, message), sizeof(Message));
+            physic_copy(&receiver->queue.start->message, (void *) get_linear_addr(sender, message), sizeof(Message));
             receiver->queue.start->prev = NULL;
             receiver->queue.start->next = NULL;
             receiver->queue.start->message.sender = sender->pid;
@@ -108,7 +108,7 @@ int sys_sendmessage(Process *process, int function, int dest, Message *message) 
             if (temp == NULL) {
                 return 2;
             }
-            physicCopy(temp, (void *) getLinearAddr(sender, message), sizeof(Message));
+            physic_copy(temp, (void *) get_linear_addr(sender, message), sizeof(Message));
             temp->next = receiver->queue.start;
             temp->prev = NULL;
             temp->message.sender = sender->pid;
@@ -179,7 +179,7 @@ int sys_receivemessage(Process *process, int function, u32 src, Message *message
                         assert(process->queue.start == process->queue.last);
                     }
                 }
-                physicCopy((void *) getLinearAddr(process, message), &temp->message, sizeof(Message));
+                physic_copy((void *) get_linear_addr(process, message), &temp->message, sizeof(Message));
                 temp->active = FALSE;
                 process->queue.count--;
                 return 0;//get queue
@@ -194,13 +194,13 @@ int sys_receivemessage(Process *process, int function, u32 src, Message *message
     return 2;
 }
 
-static u32 getLinearAddr(Process *process, void *virtual_addr) {
+static u32 get_linear_addr(Process *process, void *virtual_addr) {
     Descriptor *descriptor = &(process->ldts[INDEX_LDT_RW]);
     u32 segBase = descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24;
     return segBase + (u32) virtual_addr;
 }
 
-static int physicCopy(void *dest, void *src, int size) {
+static int physic_copy(void *dest, void *src, int size) {
     u8 *pD = dest;
     u8 *pS = src;
     for (int i = 0; i < size; ++i) {
@@ -217,7 +217,7 @@ void *virtual2Linear(u32 pid, void *virtual) {
 
 }
 
-static u32 getPid(Process *process) {
+static u32 get_pid(Process *process) {
     return process->pid;
 }
 
@@ -240,28 +240,29 @@ void testA() {
     char t = "hello";
     read_hd(buf, 512, 0, 0);
     printf("read");
-    buf[0] = 'h';
-    buf[1] = 'e';
-    buf[2] = 0;
-    write_hd(buf, 512, 0, 4);
-    read_hd(buf, 512, 0, 4);
+//    memset(buf, 0, 512);
+    buf[100] = 'h';
+    buf[101] = 'e';
+    buf[102] = 0;
+    write_hd(buf, 512, 0, 2);
+    wait(1000);
+    read_hd(buf, 512, 0, 2);
     while (1) {
-//        while (receivemessage(RECEIVE, ANY, &msg));
         printf("\nreceive sector\n");
         printf("sys id: %x\n", entry->sysId);
         entry++;
         printf("sys id: %x\n", entry->sysId);
-        printf("buf:%s", buf);
+        printf("buf:%s", &buf[100]);
         while (1);
         wait(10000);
-//        printf("A:%d  ", getTicks());
+//        printf("A:%d  ", get_ticks());
     }
 }
 
 void testB() {
     while (1) {
 //        printf("B");
-//        getTicks();
+//        get_ticks();
         wait(5000);
     }
 }

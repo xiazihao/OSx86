@@ -112,11 +112,11 @@ typedef struct s_task {
 
 void sys_call();
 
-int informInterrupt(u32 handlerPid);
+int inform_interrupt(u32 handlerPid);
 
 void schedule();
 
-void initQueue();
+void init_queue();
 
 void *virtual2Linear(u32 pid, void *virtual);
 

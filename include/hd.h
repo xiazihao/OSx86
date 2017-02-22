@@ -65,7 +65,7 @@ typedef struct {
 #define STATUS_DRDY     1<<6
 #define STATUS_DRQ      0x08//data request
 
-#define TIMEOUT         100000
+#define TIMEOUT         10000
 
 #define REG_CMD         REG_STATUS
 

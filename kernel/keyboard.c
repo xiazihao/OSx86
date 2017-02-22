@@ -22,7 +22,7 @@ static int column;
 
 static u8 get_byte_from_kbuf();
 
-void KeyboardHandler(int irq) {
+void keyboard_handler(int irq) {
     u8 scan_code = in_byte(0x60);
     if (kb_input.count < KB_IN_BYTES) {
         *(kb_input.p_head) = scan_code;
@@ -34,10 +34,10 @@ void KeyboardHandler(int irq) {
     }
 }
 
-void initKeyboard() {
+void init_keyboard() {
     kb_input.count = 0;
     kb_input.p_head = kb_input.p_tail = kb_input.buf;
-    putIrqHandler(KEYBOARD_IRQ, KeyboardHandler);
+    putIrqHandler(KEYBOARD_IRQ, keyboard_handler);
     enable_irq(KEYBOARD_IRQ);
     code_with_EO = 0;
     shift_l = 0;
@@ -67,7 +67,7 @@ static u8 get_byte_from_kbuf() {
     return scan_code;
 }
 
-void keyboardRead(TTY *p_tty) {
+void keyboard_read(TTY *p_tty) {
     u8 scan_code;
     int make;
     u32 key = 0;
@@ -154,7 +154,7 @@ void keyboardRead(TTY *p_tty) {
                 key |= ctrl_l ? FLAG_CTRL_L : 0;
                 key |= alt_l ? FLAG_ALT_L : 0;
                 key |= alt_r ? FLAG_ALT_R : 0;
-                inProcess(p_tty, key);
+                in_process(p_tty, key);
             }
         }
     }

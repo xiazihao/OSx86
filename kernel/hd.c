@@ -27,15 +27,13 @@ static void init_hard_drive();
 
 static int wait_for(int mask, int value, int timeout);
 
-void print_identify_info(u16 *hdinfo);
+static void print_identify_info(u16 *hdinfo);
 
-//void readSector(int drive, int sect_nr, void *buf, int size);
 
 static void interrupt_wait();
 
 static void command_out(HdCmd *hdcmd);
 
-//static void hdRead(void *addr, u32 sender, int bufsize);
 
 void get_part_table(int drive, int sect_nr, PartitionEntry *partEntry, int num);
 
@@ -168,9 +166,9 @@ static void command_out(HdCmd *hdcmd) {
  * @return 0:success 1:timeout
  */
 static int wait_for(int mask, int value, int timeout) {
-    int t = getTicks();
+    int t = get_ticks();
 //    assert(value == 0 || value == 1);
-    while ((getTicks() - t) * 1000 / HZ < timeout) {
+    while ((get_ticks() - t) * 1000 / HZ < timeout) {
         if ((in_byte(REG_STATUS) & mask) == value) {
             return 0;
         }
@@ -253,34 +251,9 @@ static void partition() {
  */
 void get_part_table(int drive, int sect_nr, PartitionEntry *partEntry, int num) {
     read(hdbuf, SECTOR_SIZE, sect_nr, drive);
-//    HdCmd hdcmd;
-//    hdcmd.features = 0;
-//    hdcmd.count = 1;
-//    hdcmd.lba_low = (u8) (sect_nr & 0xff);
-//    hdcmd.lba_mid = (u8) ((sect_nr >> 8) & 0xff);
-//    hdcmd.lba_high = (u8) ((sect_nr >> 16) & 0xff);
-//    hdcmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
-//    hdcmd.command = ATA_READ;
-//    command_out(&hdcmd);
-//    interrupt_wait();
-//    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
     memcpy(partEntry, hdbuf + PARTITION_TABLE_OFFSET, sizeof(PartitionEntry) * num);
 }
 
-void readSector(int drive, int sect_nr, void *buf, int size) {
-    HdCmd hdCmd;
-    hdCmd.features = 0;
-    hdCmd.count = 1;
-    hdCmd.lba_low = (u8) (sect_nr & 0xFF);
-    hdCmd.lba_mid = (u8) ((sect_nr >> 8) & 0xFF);
-    hdCmd.lba_high = (u8) ((sect_nr >> 16) & 0xFF);
-    hdCmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xf));
-    hdCmd.command = ATA_READ;
-    command_out(&hdCmd);
-    interrupt_wait();
-    port_read(REG_DATA, hdbuf, SECTOR_SIZE);
-    memcpy(buf, hdbuf, size);
-}
 
 /**
  * Handle DEV_OPEN
@@ -296,11 +269,16 @@ static void open(int device) {
     hdInfo[device].open_count++;
 }
 
+/**
+ *
+ * @param addr
+ * @param bufsize
+ * @param sector
+ * @param drive
+ */
 static void hd_write(void *addr, int bufsize, int sector, int drive) {
-    if (wait_for(STATUS_DRDY, STATUS_DRDY, TIMEOUT)) {
-        assert(0);
-    }
     HdCmd hdCmd;
+//    memcpy(hdbuf, addr, bufsize);
     hdCmd.features = 0;
     hdCmd.count = 1;
     hdCmd.lba_low = (u8) (sector & 0xFF);
@@ -309,7 +287,10 @@ static void hd_write(void *addr, int bufsize, int sector, int drive) {
     hdCmd.device = (u8) (MAKE_DEVICE_REG(1, drive, (sector >> 24) & 0xf));
     hdCmd.command = ATA_WRITE;
     command_out(&hdCmd);
-    port_write(REG_DATA, hdbuf, SECTOR_SIZE);
+    if (wait_for(STATUS_DRQ, STATUS_DRQ, TIMEOUT)) {
+        assert(0);
+    }
+    port_write(REG_DATA, addr, SECTOR_SIZE);
     interrupt_wait();
 }
 
@@ -341,6 +322,6 @@ static void read(void *addr, int bufsize, int sector, int drive) {
  */
 void hd_handler(int irq) {
     hd_status = in_byte(REG_STATUS);
-    informInterrupt(PID_HD);
+    inform_interrupt(PID_HD);
 //    while (1);
 }
