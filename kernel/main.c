@@ -10,7 +10,7 @@
  * Init process
  */
 void kernel_main() {
-    disp_str("-----\"kernel_main\" begins-----\n");
+//    disp_str("-----\"kernel_main\" begins-----\n");
     Process *p_proc = process_table;
     Task *p_task = task_table;
     char *p_task_stack = task_stack + STACK_SIZE_TOTAL;

@@ -29,26 +29,37 @@ typedef struct {
     u8 device;
     u8 command;
 } HdCmd;
+
 typedef PartitionEntry PartitionBasic;
+
 typedef struct {
     PartitionBasic partitionBasic;
     char name[5];
 } PartitionExtent;
+
 typedef struct {
     PartitionExtent partitionInformation[16];
     int open_count;
+    int boot_partition;
 } HdInformation;
 
+typedef struct {
+    u32 start; // start sector
+    u32 size;   //how many sector in this partition
+} PartitionInfomation;
 #define SECTOR_SIZE     512
 
 #define ATA_IDENTIFY        0xEC
 #define ATA_READ            0x20
-#define ATA_WRITE		    0x30
+#define ATA_WRITE            0x30
 
 #define DEV_OPEN    1
 #define DEV_CLOSE   2
 #define DEV_READ    3
 #define DEV_WRITE   4
+#define DEV_IOCTRL  5
+//
+#define IO_PARTITIONINFO   1
 
 //register
 #define REG_DATA        0x1F0

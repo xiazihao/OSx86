@@ -61,3 +61,33 @@ int get_ticks() {
     }
     return 0;
 }
+
+int open_hd() {
+    Message message;
+    message.type = DEV_OPEN;
+    sendmessage(0, PID_HD, &message);
+    int t = get_ticks();
+    while ((get_ticks() - t) * 1000 / HZ < 1000) {
+        if (!receivemessage(0, PID_HD, &message)) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int partition_infomation(PartitionInfomation *addr, int device) {
+    //m2i1:type      m2i2:device(obj)    m2i3: m2p4;
+    Message message;
+    message.type = DEV_IOCTRL;
+    message.msg2.m2i1 = IO_PARTITIONINFO;
+    message.msg2.m2i2 = 6;
+    message.msg2.m2p4 = addr;
+    sendmessage(0, PID_HD, &message);
+    int t = get_ticks();
+    while ((get_ticks() - t) * 1000 / HZ < 1000) {
+        if (!receivemessage(0, PID_HD, &message)) {
+            return 0;
+        }
+    }
+    return 1;
+}

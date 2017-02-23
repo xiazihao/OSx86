@@ -103,7 +103,7 @@ typedef struct s_task {
 
 
 #define NR_PROCS    3
-#define NR_TASKS    3
+#define NR_TASKS    4
 
 
 #define QUEUESIZE  128
@@ -125,6 +125,7 @@ void *virtual2Linear(u32 pid, void *virtual);
 #define STACK_SIZE_TTY      0x8000
 #define STACK_SYSTASK       0x8000
 #define STACK_HD            0x8000
+#define STACK_FS            0x8000
 #define STACK_IDLE          0x8000
-#define STACK_SIZE_TOTAL    STACK_SIZE_TESTA + STACK_SIZE_TESTB + STACK_SIZE_TTY + STACK_SYSTASK + STACK_IDLE + STACK_HD
+#define STACK_SIZE_TOTAL    STACK_SIZE_TESTA + STACK_SIZE_TESTB + STACK_SIZE_TTY + STACK_SYSTASK + STACK_IDLE + STACK_HD + STACK_FS
 #endif

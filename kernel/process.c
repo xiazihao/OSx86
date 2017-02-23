@@ -235,24 +235,25 @@ typedef struct {
 } Entry;
 
 void testA() {
-    u8 buf[512];
-    Entry *entry = &buf[0x1BE];
-    char t = "hello";
-    read_hd(buf, 512, 0, 0);
-    printf("read");
-//    memset(buf, 0, 512);
-    buf[100] = 'h';
-    buf[101] = 'e';
-    buf[102] = 0;
-    write_hd(buf, 512, 0, 2);
-    wait(1000);
-    read_hd(buf, 512, 0, 2);
+//    PartitionInfomation partitionInfomation;
+//    u8 buf[512];
+//    open_hd();
+//    partition_infomation(&partitionInfomation, 6);
+//    Entry *entry = &buf[0x1BE];
+//    read_hd(buf, 512, 0, 0);
+//    buf[100] = 'h';
+//    buf[101] = 'e';
+//    buf[102] = 0;
+//    write_hd(buf, 512, 0, 2);
+//    wait(1000);
+//    read_hd(buf, 512, 0, 2);
     while (1) {
-        printf("\nreceive sector\n");
-        printf("sys id: %x\n", entry->sysId);
-        entry++;
-        printf("sys id: %x\n", entry->sysId);
-        printf("buf:%s", &buf[100]);
+//        printf("\nreceive sector\n");
+//        printf("start: %x \n size: %x", partitionInfomation.start, partitionInfomation.size);
+//        printf("sys id: %x\n", entry->sysId);
+//        entry++;
+//        printf("sys id: %x\n", entry->sysId);
+//        printf("buf:%s", &buf[100]);
         while (1);
         wait(10000);
 //        printf("A:%d  ", get_ticks());

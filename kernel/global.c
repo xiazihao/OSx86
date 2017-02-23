@@ -17,6 +17,7 @@ extern void task_hd();
 
 extern void systask();
 
+extern void task_fs();
 
 int sys_sendmessage(Process *process, int function, int dest, Message *message);
 
@@ -45,7 +46,8 @@ DevDriverMap dd_map[] = {
 
 Task task_table[NR_TASKS] = {{task_tty, STACK_SIZE_TTY, "tty"},
                              {systask,  STACK_SYSTASK,  "system task"},
-                             {task_hd,  STACK_HD,       "hd"}};
+                             {task_hd,  STACK_HD,       "hd"},
+                             {task_fs,  STACK_FS,       "file system"}};
 Task user_proc_table[NR_PROCS] = {
         {testA, STACK_SIZE_TESTA, "testA"},
         {testB, STACK_SIZE_TESTB, "testB"},
