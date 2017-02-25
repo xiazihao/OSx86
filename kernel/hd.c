@@ -66,6 +66,7 @@ void task_hd() {
                 read(virtual2Linear(msg.sender, msg.msg2.m2p4), msg.msg2.m2i1, msg.msg2.m2i2, msg.msg2.m2i3);
 //                hdRead(msg.msg2.m2p3, msg.sender, msg.msg2.m2i1);
                 sendmessage(0, msg.sender, &msg);
+//                printf("hd read");
                 break;
             case DEV_WRITE:
 //                printf("write");
@@ -105,7 +106,7 @@ static void hd_identify(int drive) {
     command_out(&cmd);
     interrupt_wait();
     port_read(REG_DATA, hdbuf, SECTOR_SIZE);
-//    print_identify_info((u16 *) hdbuf);
+    print_identify_info((u16 *) hdbuf);
 //    partition();
 //    print_partition_table();
 }
@@ -242,6 +243,7 @@ static void partition() {
             do {
                 get_part_table(0, startSector, partitionBuf, 2);
                 memcpy(&hdInfo[0].partitionInformation[temp].partitionBasic, partitionBuf, sizeof(PartitionEntry));
+                hdInfo[0].partitionInformation[temp].partitionBasic.startSectorFromStart += startSector;
                 if (hdInfo[0].partitionInformation[temp].partitionBasic.status == 0x80) {
                     hdInfo[0].boot_partition = temp;
                 }
@@ -282,7 +284,7 @@ static void open(int device) {
     hd_identify(device);
     if (hdInfo[device].open_count == 0) {
         partition();
-//        print_partition_table();
+        print_partition_table();
     }
     hdInfo[device].open_count++;
 }

@@ -2,6 +2,7 @@
 #include <proto.h>
 #include <systask.h>
 #include <lib.h>
+#include <usr.h>
 
 //
 // Created by xiazihao on 17-2-21.
@@ -15,7 +16,24 @@ int read_hd(void *buf, int bufsize, int drive, int sector) {
     message.msg2.m2i3 = drive;
     message.msg2.m2p4 = buf;
     sendmessage(0, PID_HD, &message);
+//    int t = get_ticks();
+//    while ((get_ticks() - t) * 1000 / HZ < 10000) {
+//        if (!receivemessage(RECEIVE, ANY, &message)) {
+//            printf("read success");
+//            return 0;
+//        }
+//    }
+//    return 1;
     while (receivemessage(RECEIVE, ANY, &message));
+//
+//    int t = get_ticks();
+//    while ((get_ticks() - t) * 1000 / HZ < 1000) {
+//        if (!receivemessage(0, PID_HD, &message)) {
+//            return 0;
+//        }
+//    }
+//    return 1;
+
 }
 
 int write_hd(void *buf, int bufsize, int drive, int sector) {

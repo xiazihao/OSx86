@@ -3,6 +3,12 @@
 
 #include "const.h"
 #include "protect.h"
+#include "fs.h"
+
+/**
+ * Max number of files per process could open
+ */
+#define NR_FILES   10
 
 typedef struct s_stackframe {
     u32 gs;
@@ -79,6 +85,7 @@ typedef struct s_proc {
     int interrupt;
     u32 receivefrom;
     MessageQueue queue;
+    FileDescriptor *fileDescriptor[NR_FILES];
 } Process;
 
 

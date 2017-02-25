@@ -9,7 +9,7 @@
 /**
  *
  */
-#define MAGIC_V1    0x111
+#define MAGIC_V1    0x222
 typedef struct s_super_block {
     u32 magic;                      //magic number
     u32 nr_inode;                   //the number of inode
@@ -46,14 +46,23 @@ typedef struct s_inode {
     int i_count;
     int i_num;
 } Inode;
+
 #define INODE_SIZE (sizeof(Inode) - 3*sizeof(int))
 
 #define MAX_FILE_NAME_LENGTH    12
+
 typedef struct s_dir_entry {
-    int inode_nr;
     char name[MAX_FILE_NAME_LENGTH];
+    int inode_nr;
 } DirEntry;
+
 #define DIR_ENTRY_SIZE  sizeof(DirEntry);
+
+typedef struct s_file_descriptor {
+    u32 fd_mode;
+    int fd_position;
+    Inode *fd_inode;
+} FileDescriptor;
 
 typedef struct {
     u32 driver_nr;
@@ -73,5 +82,9 @@ typedef struct {
 #define MAJOR(x)        ((x >> MAJOR_SHIFT) & 0xFF)
 #define MINOR(x)        (x &~(~0>>MAJOR_SHIFT<<MAJOR_SHIFT))
 
-
+/**
+ * inode mode
+ */
+#define INODE_MODE_DIRECTORY   0x00010000
+#define INODE_MODE_CHAR        0x00020000
 #endif //CHP6_FS_H

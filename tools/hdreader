@@ -1,0 +1,7 @@
+addr = $1
+if $# == 1
+	img = "80m.img"
+then 
+	img = $2
+fi
+xxd -u -a -g 1 -c 16 -s ${addr}  -l 512 ${img}

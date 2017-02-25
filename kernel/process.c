@@ -130,6 +130,7 @@ int sys_sendmessage(Process *process, int function, int dest, Message *message) 
         assert(receiver->queue.last != NULL);
         assert(receiver->queue.count != NULL);
 //        schedule();
+//        p_proc_ready = receiver;
         return 0;//ok
     }
     return 1;//dest is not allowed receive
@@ -184,7 +185,7 @@ int sys_receivemessage(Process *process, int function, u32 src, Message *message
                 process->queue.count--;
                 return 0;//get queue
             }
-            // no message in quequ
+            // no message in queque
             assert(process->queue.count == 0);
             schedule();
             return 1;
@@ -213,7 +214,7 @@ static int physic_copy(void *dest, void *src, int size) {
 void *virtual2Linear(u32 pid, void *virtual) {
     assert(pid >= 0 && pid < NR_TASKS + NR_CONSOLES);
     Descriptor *descriptor = &(process_table[pid].ldts[INDEX_LDT_RW]);
-    return (descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24) + (u32) virtual;
+    return (void *) (descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24) + (u32) virtual;
 
 }
 
