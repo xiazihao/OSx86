@@ -9,29 +9,51 @@
 
 u8 *fsbuf = (u8 *) 0x600000;
 const int FSBUF_SIZE = 0x100000;
+SuperBlock superBlock_cache[10];
+Inode inode_cache[NR_INODE_CACHE];
 
+/**
+ *
+ */
 static void mkfs();
 
+static void init_fs();
+
 void task_fs() {
-    SuperBlock superBlock;
+//    SuperBlock superBlock_cache;
+    init_fs();
     printf("\nfile system task\n");
     open_hd();
     mkfs();
 
-    if (read_hd(&superBlock, SUPER_BLOCK_SIZE, 6, 1)) {
+    if (read_hd(&superBlock_cache[0], SUPER_BLOCK_SIZE, 6, 1)) {
         printf("read error");
     }
-    assert(superBlock.magic == MAGIC_V1);
-    printf("\n\nnr_inode: %d", superBlock.nr_inode);
-    printf("\n\nn_1st_sect:%d", superBlock.n_1st_sect);
-    printf("mkfs");
+    superBlock_cache[0].super_block_device = DEV_HD;
+    assert(superBlock_cache[0].magic == MAGIC_V1);
+    printf("\n\nnr_inode: %d", superBlock_cache[0].nr_inode);
+    printf("\n\nn_1st_sect:%d\n", superBlock_cache[0].n_1st_sect);
+    printf("mkfs\n");
+    printf("%d\n", alloc_inode_map(DEV_HD));
+    printf("%d\n", alloc_inode_map(DEV_HD));
+    printf("%d\n", alloc_inode_map(DEV_HD));
+    printf("%d\n", alloc_inode_map(DEV_HD));
+    printf("sector:\n");
+    printf("%d\n", alloc_sector_map(DEV_HD, 3));
+    printf("%d\n", alloc_sector_map(DEV_HD, 6));
+    Inode *inode = get_inode(DEV_HD, 1);
+    printf("%d", inode->i_start_sect);
+    get_inode(DEV_HD, 1);
     while (1) {
 
     }
 }
 
 static void init_fs() {
-
+    /**
+     * init inode cache
+     */
+    memset(inode_cache, 0, NR_INODE_CACHE * sizeof(struct s_inode));
 }
 
 static void mkfs() {
@@ -83,11 +105,11 @@ static void mkfs() {
      */
     memset(fsbuf, 0, SECTOR_SIZE * superBlock.nr_sector_map_sects);
     // include root dir sector
-    int left = superBlock.n_1st_sect;
+    // ignore sector map bit 0; no n_1st_sect start from byte 0 bit 1, sector 8 is byte 1 bit 0 not byte0 bit 7
+    int left = superBlock.n_1st_sect + 1;
     for (int i = 0; left; ++i) {
         if (left < 8) {
             fsbuf[i] = ~(((u8) ~0) << left);
-//            printf("i:%d left:%d %x", i, left, fsbuf[i]);
             left = 0;
         } else {
             fsbuf[i] = 0xFF;
@@ -106,14 +128,14 @@ static void mkfs() {
     printf("nr inode sects:%d", superBlock.nr_inode_sects);
     memset(fsbuf, 1, SECTOR_SIZE * superBlock.nr_inode_sects);
     //root inode
-    Inode *inode = (Inode *) fsbuf;
+    Inode *inode = (Inode *) &fsbuf[INODE_SIZE];
     inode->i_mode = 1;
     inode->i_start_sect = superBlock.n_1st_sect; // root directory
     inode->i_nr_sects = 0;
     inode->i_size = (1 + NR_CONSOLES) * DIR_ENTRY_SIZE;// . and tty0-2, 4 files
 
-    inode++;
     for (int i = 0; i < NR_CONSOLES; ++i) {
+        inode = (Inode *) &fsbuf[INODE_SIZE * (i + 2)];
         inode->i_mode = INODE_MODE_CHAR;
         inode->i_size = 0;
         inode->i_nr_sects = 0;
@@ -149,6 +171,37 @@ static void mkfs() {
     strcpy(dirEntry->name, "tty 2");
     dirEntry->inode_nr = 4;
     write_hd(fsbuf, SECTOR_SIZE, 6, superBlock.n_1st_sect);
+}
 
-
+Inode *get_inode(int dev, int num) {
+    if (num == 0) {
+        return NULL;
+    }
+    Inode *insert = NULL;
+    for (Inode *position = inode_cache; position < &inode_cache[NR_INODE_CACHE]; ++position) {
+        if (position->i_count) {
+            if (position->i_dev == dev && position->i_num) {
+                position->i_count++;
+                return position;
+            }
+        } else { // empty inode cache
+            if (insert == NULL) {
+                insert = position;
+            }
+        }
+    }
+    if (insert == NULL) {
+        return NULL;
+    }
+    SuperBlock *superBlock = get_super_block(dev);
+    int inode_array_start =
+            1 + 1 + superBlock->nr_inode_map_sects + superBlock->nr_sector_map_sects +
+            (num) / (SECTOR_SIZE / INODE_SIZE);
+    assert(inode_array_start == superBlock->nr_sector_map_sects + 3);
+    read_hd(fsbuf, SECTOR_SIZE, 6, inode_array_start);
+    memcpy(insert, &fsbuf[INODE_SIZE * (((num) % (SECTOR_SIZE / INODE_SIZE)))], INODE_SIZE);
+    insert->i_count = 1;
+    insert->i_dev = dev;
+    insert->i_num = num;
+    return insert;
 }

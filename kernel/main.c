@@ -17,8 +17,8 @@ void kernel_main() {
     u16 selector_ldt = SELECTOR_LDT_FIRST;
     u8 privilege;
     u8 rpl;
-    int eflags;
-    int i;
+    u32 eflags;
+    u32 i;
     for (i = 0; i < NR_TASKS + NR_PROCS; i++) {
         if (i < NR_TASKS) {
             p_task = task_table + i;
@@ -40,16 +40,17 @@ void kernel_main() {
         memcpy(&p_proc->ldts[1], &gdt[SELECTOR_KERNEL_DS >> 3], sizeof(Descriptor));
         p_proc->ldts[1].attr1 = DA_DRW | privilege << 5;
 
-        p_proc->regs.cs = (0 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.ds = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.es = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.fs = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.ss = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.gs = (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl;
+        p_proc->regs.cs = ((u32) 0 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        p_proc->regs.ds = ((u32) 8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        p_proc->regs.es = ((u32) 8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        p_proc->regs.fs = ((u32) 8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        p_proc->regs.ss = ((u32) 8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        p_proc->regs.gs = ((u32) SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl;
         p_proc->regs.eip = (u32) p_task->initial_eip;
         p_proc->regs.esp = (u32) p_task_stack;
         p_proc->regs.eflags = eflags;
 
+        p_proc->pdt = (u32) PAGEDIRBASE;
         p_proc->nrtty = 0;
         p_proc->priority = 1;
         p_proc->status = RUNNABLE;

@@ -16,6 +16,8 @@ typedef void *system_call;
 
 typedef char *va_list;
 
+typedef char bool;
+
 #define NULL    0
 #define TRUE    1
 #define FALSE   0

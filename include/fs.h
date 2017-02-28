@@ -10,6 +10,7 @@
  *
  */
 #define MAGIC_V1    0x222
+#define NR_INODE_CACHE  64
 typedef struct s_super_block {
     u32 magic;                      //magic number
     u32 nr_inode;                   //the number of inode
@@ -34,17 +35,17 @@ typedef struct s_super_block {
 #define SUPER_BLOCK_SIZE (sizeof(SuperBlock) - sizeof(int))
 
 typedef struct s_inode {
-    u32 i_mode;
-    u32 i_size;
-    u32 i_start_sect;
-    u32 i_nr_sects;
-    u8 _unused[16];
+    u32 i_mode;                 //
+    u32 i_size;                 //
+    u32 i_start_sect;           //
+    u32 i_nr_sects;             //
+    u8 _unused[16];             //
     /**
      * Below elements only exist in memory not store in hard drive
      */
-    int i_dev;
-    int i_count;
-    int i_num;
+    int i_dev;                  // The device which that inode get from
+    int i_count;                // The number of processes which share this inode
+    int i_num;                  //
 } Inode;
 
 #define INODE_SIZE (sizeof(Inode) - 3*sizeof(int))
@@ -87,4 +88,21 @@ typedef struct {
  */
 #define INODE_MODE_DIRECTORY   0x00010000
 #define INODE_MODE_CHAR        0x00020000
+
+/**
+ * global varibles
+ */
+extern u8 *fsbuf;
+extern const int FSBUF_SIZE;
+extern SuperBlock superBlock_cache[10];
+extern Inode inode_cache[NR_INODE_CACHE];
+
+SuperBlock *get_super_block(int dev);
+
+int alloc_inode_map(int dev);
+
+int alloc_sector_map(int dev, int number);
+
+Inode *get_inode(int dev, int num);
+
 #endif //CHP6_FS_H

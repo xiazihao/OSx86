@@ -88,12 +88,20 @@ csinit:
 	hlt
 
 restart:;load process
-	mov esp,[p_proc_ready];esp is the start of process block
+	;esp is the start of process block
+	mov esp,[p_proc_ready]
+	
 	lldt [esp + P_LDT_SEL];P_LDT_SEL: offset from process block
 	lea eax,[esp + P_STACKTOP]
-	mov dword[tss + TSS3_S_SP0],eax; tss.esp0 equ the end of Process.StackFrame, so that when
-restart_reenter:					; get into interrupt, the esp will start here and save the register
-    dec dword[k_reenter]			; imiditely. ss esp eflags cs eip will push here
+	;tss.esp0 equ the end of Process.StackFrame, so that when
+	;get into interrupt, the esp will start here and save the register
+	;imiditely. ss esp eflags cs eip will push here
+	mov dword[tss + TSS3_S_SP0],eax
+	;load PDT
+	mov eax,dword[esp + P_PDT] 
+	mov cr3,eax
+restart_reenter:					
+    dec dword[k_reenter]			
 	pop gs
 	pop fs
 	pop es

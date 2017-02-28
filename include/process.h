@@ -76,6 +76,7 @@ typedef struct s_proc {
     u16 ldt_sel;//ldt selector
     Descriptor ldts[LDT_SIZE];//0:code seg 1:data seg
     //above is essential and the sequence cannot be changed
+    u32 pdt;//page directory table
     int ticks;
     int priority;
     u32 pid;

@@ -27,6 +27,8 @@ SSREG		equ	ESPREG		+ 4
 P_STACKTOP	equ	SSREG		+ 4
 P_LDT_SEL	equ	P_STACKTOP
 P_LDT		equ	P_LDT_SEL	+ 4
+;8 equ to the size of Descriptor
+P_PDT		equ P_LDT 		+ 8 * 2
 
 TSS3_S_SP0	equ	4
 
