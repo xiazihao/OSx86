@@ -109,3 +109,14 @@ int partition_infomation(PartitionInfomation *addr, int device) {
     }
     return 1;
 }
+
+int open(char *name, int name_len, int flags) {
+    //m2i1:flags   m2i2:name_len   m2i3        m2p4:name_string
+    //int do_open(int flags, int name_len, void *name_string, u32 caller)
+    Message message;
+    message.type = FILE_OPEN;
+    message.msg2.m2i1 = flags;
+    message.msg2.m2i2 = name_len;
+    message.msg2.m2p4 = name;
+    sendmessage(0, PID_FS, &message);
+}

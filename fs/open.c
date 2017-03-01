@@ -5,6 +5,16 @@
 #include <fs.h>
 #include <lib.h>
 #include <usr.h>
+#include <systask.h>
+#include <proto.h>
+
+int do_open(int flags, int name_len, void *name_string, u32 caller) {
+    int fd = -1;
+    char pathname[128];
+    assert(name_len < 128);
+    physic_copy(virtual2Linear(PID_FS, pathname), virtual2Linear(caller, name_string), name_len);
+    printf("%s", pathname);
+}
 
 /**
  *
@@ -118,4 +128,20 @@ SuperBlock *get_super_block(int dev) {
         }
     }
     assert(0);
+}
+
+static Inode *new_inode(int dev, int inode_nr, u32 start_sect) {
+    Inode *new_inode = get_inode(dev, inode_nr);
+    new_inode->i_mode = INODE_MODE_REGULAR;
+    new_inode->i_size = 0;
+    new_inode->i_start_sect = start_sect;
+    new_inode->i_nr_sects = 1;
+
+    new_inode->i_dev = dev;
+    new_inode->i_count = 1;
+    new_inode->i_num = inode_nr;
+
+    sync_inode(new_inode);
+    return new_inode;
+
 }

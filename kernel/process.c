@@ -14,7 +14,6 @@ MessageChain messageQueue[QUEUESIZE];
 
 static u32 get_pid(Process *process);
 
-static int physic_copy(void *dest, void *src, int size);
 
 static u32 get_linear_addr(Process *process, void *virtual_addr);
 
@@ -201,22 +200,6 @@ static u32 get_linear_addr(Process *process, void *virtual_addr) {
     return segBase + (u32) virtual_addr;
 }
 
-static int physic_copy(void *dest, void *src, int size) {
-    u8 *pD = dest;
-    u8 *pS = src;
-    for (int i = 0; i < size; ++i) {
-        *pD = *pS;
-        pD++;
-        pS++;
-    }
-}
-
-void *virtual2Linear(u32 pid, void *virtual) {
-    assert(pid >= 0 && pid < NR_TASKS + NR_CONSOLES);
-    Descriptor *descriptor = &(process_table[pid].ldts[INDEX_LDT_RW]);
-    return (void *) (descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24) + (u32) virtual;
-
-}
 
 static u32 get_pid(Process *process) {
     return process->pid;
@@ -236,28 +219,11 @@ typedef struct {
 } Entry;
 
 void testA() {
-//    PartitionInfomation partitionInfomation;
-//    u8 buf[512];
-//    open_hd();
-//    partition_infomation(&partitionInfomation, 6);
-//    Entry *entry = &buf[0x1BE];
-//    read_hd(buf, 512, 0, 0);
-//    buf[100] = 'h';
-//    buf[101] = 'e';
-//    buf[102] = 0;
-//    write_hd(buf, 512, 0, 2);
-//    wait(1000);
-//    read_hd(buf, 512, 0, 2);
+    char name[] = "file xiazihao";
+    wait(10000);
+    open(name, sizeof(name), 0);
     while (1) {
-//        printf("\nreceive sector\n");
-//        printf("start: %x \n size: %x", partitionInfomation.start, partitionInfomation.size);
-//        printf("sys id: %x\n", entry->sysId);
-//        entry++;
-//        printf("sys id: %x\n", entry->sysId);
-//        printf("buf:%s", &buf[100]);
-        while (1);
-        wait(10000);
-//        printf("A:%d  ", get_ticks());
+
     }
 }
 

@@ -22,7 +22,7 @@ static HdInformation hdInfo[1];
 
 static void io_ctrl(void *addr, int io_type, int obj);
 
-static void open(int device);
+static void dev_open(int device);
 
 static void partition();
 
@@ -57,7 +57,7 @@ void task_hd() {
         switch (msg.type) {
             case DEV_OPEN:
 //                printf("get open");
-                open(0);
+                dev_open(0);
 //                while (1);
                 sendmessage(0, msg.sender, &msg);
                 break;
@@ -279,7 +279,7 @@ void get_part_table(int drive, int sect_nr, PartitionEntry *partEntry, int num) 
  * Handle DEV_OPEN
  * @param device
  */
-static void open(int device) {
+static void dev_open(int device) {
     assert(device == 0);
     hd_identify(device);
     if (hdInfo[device].open_count == 0) {

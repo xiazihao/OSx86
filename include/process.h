@@ -126,7 +126,7 @@ void schedule();
 
 void init_queue();
 
-void *virtual2Linear(u32 pid, void *virtual);
+
 
 #define STACK_SIZE_TESTA    0x8000
 #define STACK_SIZE_TESTB    0x8000

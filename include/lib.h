@@ -5,10 +5,15 @@
 #ifndef CHP6_LIB_H
 #define CHP6_LIB_H
 
+#include <type.h>
 //klib.c
 void *memcpy(void *pDst, void *pSrc, int iSize);
 
 void memset(void const *p_dst, char ch, int size);
+
+int physic_copy(void *dest, void *src, int size);
+
+void *virtual2Linear(u32 pid, void *virtual);
 
 char *strcpy(char *p_dst, char const *p_src);
 
@@ -18,7 +23,7 @@ char *int2str(char *str, int num);
 
 unsigned int strlen(char const *string);
 
-void assertion_failure(char const *exp, char const *file, char const *base_file, const int line, char const*function);
+void assertion_failure(char const *exp, char const *file, char const *base_file, const int line, char const *function);
 
 #define assert(exp) if(exp);else assertion_failure(#exp,__FILE__,__BASE_FILE__,__LINE__,__FUNCTION__)
 #endif //CHP6_LIB_H

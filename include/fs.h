@@ -88,7 +88,12 @@ typedef struct {
  */
 #define INODE_MODE_DIRECTORY   0x00010000
 #define INODE_MODE_CHAR        0x00020000
-
+#define INODE_MODE_REGULAR     0x10000000
+/**
+ * file operation
+ */
+#define FILE_OPEN       0x01
+#define FILE_READ       0x02
 /**
  * global varibles
  */
@@ -104,5 +109,9 @@ int alloc_inode_map(int dev);
 int alloc_sector_map(int dev, int number);
 
 Inode *get_inode(int dev, int num);
+
+void sync_inode(Inode *inode);
+
+int do_open(int flags, int name_len, void *name_string, u32 caller);
 
 #endif //CHP6_FS_H

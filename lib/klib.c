@@ -1,3 +1,4 @@
+#include <lib.h>
 #include "const.h"
 #include "global.h"
 #include "protect.h"
@@ -97,4 +98,19 @@ void memset(void const *p_dst, char ch, int size) {
     for (int i = 0; i < size; ++i) {
         *p_d++ = ch;
     }
+}
+int physic_copy(void *dest, void *src, int size) {
+    u8 *pD = dest;
+    u8 *pS = src;
+    for (int i = 0; i < size; ++i) {
+        *pD = *pS;
+        pD++;
+        pS++;
+    }
+}
+void *virtual2Linear(u32 pid, void *virtual) {
+    assert(pid >= 0 && pid < NR_TASKS + NR_CONSOLES);
+    Descriptor *descriptor = &(process_table[pid].ldts[INDEX_LDT_RW]);
+    return (void *) (descriptor->base_low | descriptor->base_mid << 16 | descriptor->base_high << 24) + (u32) virtual;
+
 }

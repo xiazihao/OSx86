@@ -19,4 +19,6 @@ int open_hd();
 
 int partition_infomation(PartitionInfomation *addr, int device);
 
+int open(char *name, int name_len, int flags);
+
 #endif //OSX86_USR_H

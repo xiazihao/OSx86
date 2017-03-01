@@ -20,6 +20,7 @@ static void mkfs();
 static void init_fs();
 
 void task_fs() {
+    receivemessage(INFORM, ANY, NULL);
 //    SuperBlock superBlock_cache;
     init_fs();
     printf("\nfile system task\n");
@@ -33,7 +34,6 @@ void task_fs() {
     assert(superBlock_cache[0].magic == MAGIC_V1);
     printf("\n\nnr_inode: %d", superBlock_cache[0].nr_inode);
     printf("\n\nn_1st_sect:%d\n", superBlock_cache[0].n_1st_sect);
-    printf("mkfs\n");
     printf("%d\n", alloc_inode_map(DEV_HD));
     printf("%d\n", alloc_inode_map(DEV_HD));
     printf("%d\n", alloc_inode_map(DEV_HD));
@@ -44,8 +44,18 @@ void task_fs() {
     Inode *inode = get_inode(DEV_HD, 1);
     printf("%d", inode->i_start_sect);
     get_inode(DEV_HD, 1);
+    Message message;
     while (1) {
-
+        while (receivemessage(RECEIVE, ANY, &message));
+        switch (message.type) {
+            case FILE_OPEN:
+                //m2i1:flags   m2i2:name_len   m2i3        m2p4:name_string
+                //int do_open(int flags, int name_len, void *name_string, u32 caller)
+                do_open(message.msg2.m2i1, message.msg2.m2i2, message.msg2.m2p4, message.sender);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -60,6 +70,12 @@ static void mkfs() {
     u32 bits_per_sect = SECTOR_SIZE * 8;
     PartitionInfomation boot_partition_info;
     partition_infomation(&boot_partition_info, 6);
+    read_hd(fsbuf, SUPER_BLOCK_SIZE, 6, 1);
+    SuperBlock *s = (SuperBlock *) fsbuf;
+    if (s->magic == MAGIC_V1) {
+        memcpy(fsbuf, fsbuf, SUPER_BLOCK_SIZE);
+        return;
+    }
     /**
      * Super block
      */
@@ -173,6 +189,12 @@ static void mkfs() {
     write_hd(fsbuf, SECTOR_SIZE, 6, superBlock.n_1st_sect);
 }
 
+/**
+ *
+ * @param dev
+ * @param num
+ * @return
+ */
 Inode *get_inode(int dev, int num) {
     if (num == 0) {
         return NULL;
@@ -197,11 +219,26 @@ Inode *get_inode(int dev, int num) {
     int inode_array_start =
             1 + 1 + superBlock->nr_inode_map_sects + superBlock->nr_sector_map_sects +
             (num) / (SECTOR_SIZE / INODE_SIZE);
-    assert(inode_array_start == superBlock->nr_sector_map_sects + 3);
+//    assert(inode_array_start == superBlock->nr_sector_map_sects + 3);
     read_hd(fsbuf, SECTOR_SIZE, 6, inode_array_start);
     memcpy(insert, &fsbuf[INODE_SIZE * (((num) % (SECTOR_SIZE / INODE_SIZE)))], INODE_SIZE);
     insert->i_count = 1;
     insert->i_dev = dev;
     insert->i_num = num;
     return insert;
+}
+
+/**
+ * Untested
+ * @param inode
+ */
+void sync_inode(Inode *inode) {
+    SuperBlock *superBlock = get_super_block(inode->i_dev);
+    int inode_array_start =
+            1 + 1 + superBlock->nr_inode_map_sects + superBlock->nr_sector_map_sects +
+            (inode->i_num) / (SECTOR_SIZE / INODE_SIZE);
+    read_hd(fsbuf, SECTOR_SIZE, 6, inode_array_start);
+    Inode *p = (Inode *) &fsbuf[inode->i_num % (SECTOR_SIZE / INODE_SIZE) * INODE_SIZE];
+    memcpy(p, inode, INODE_SIZE);
+    write_hd(fsbuf, SECTOR_SIZE, 6, inode_array_start);
 }
