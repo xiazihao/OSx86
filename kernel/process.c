@@ -221,7 +221,7 @@ typedef struct {
 void testA() {
     char name[] = "file xiazihao";
     wait(10000);
-    open(name, sizeof(name), 0);
+    open(name, sizeof(name), O_FLAG_CREATE);
     while (1) {
 
     }

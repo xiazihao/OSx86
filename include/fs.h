@@ -11,6 +11,7 @@
  */
 #define MAGIC_V1    0x222
 #define NR_INODE_CACHE  64
+#define NR_DESCRIPTOR_CACHE  128
 typedef struct s_super_block {
     u32 magic;                      //magic number
     u32 nr_inode;                   //the number of inode
@@ -57,7 +58,7 @@ typedef struct s_dir_entry {
     int inode_nr;
 } DirEntry;
 
-#define DIR_ENTRY_SIZE  sizeof(DirEntry);
+#define DIR_ENTRY_SIZE  sizeof(DirEntry)
 
 typedef struct s_file_descriptor {
     u32 fd_mode;
@@ -86,14 +87,19 @@ typedef struct {
 /**
  * inode mode
  */
-#define INODE_MODE_DIRECTORY   0x00010000
-#define INODE_MODE_CHAR        0x00020000
-#define INODE_MODE_REGULAR     0x10000000
+#define INODE_MODE_DIRECTORY   0x0001
+#define INODE_MODE_CHAR        0x0002
+#define INODE_MODE_REGULAR     0x1000
 /**
  * file operation
  */
 #define FILE_OPEN       0x01
 #define FILE_READ       0x02
+#define ROOT_DIR        0x04 // test
+/**
+ * open flag
+ */
+#define O_FLAG_CREATE   0x01
 /**
  * global varibles
  */
@@ -101,17 +107,20 @@ extern u8 *fsbuf;
 extern const int FSBUF_SIZE;
 extern SuperBlock superBlock_cache[10];
 extern Inode inode_cache[NR_INODE_CACHE];
+extern FileDescriptor file_descriptor_table[NR_DESCRIPTOR_CACHE];
 
 SuperBlock *get_super_block(int dev);
 
 int alloc_inode_map(int dev);
 
-int alloc_sector_map(int dev, int number);
+u32 alloc_sector_map(int dev, int number);
 
 Inode *get_inode(int dev, int num);
 
 void sync_inode(Inode *inode);
 
-int do_open(int flags, int name_len, void *name_string, u32 caller);
+int do_open(u32 flags, int name_len, void *name_string, u32 caller);
+
+int free_inode(Inode *inode);
 
 #endif //CHP6_FS_H

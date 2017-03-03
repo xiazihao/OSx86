@@ -8,7 +8,7 @@
 /**
  * Max number of files per process could open
  */
-#define NR_FILES   10
+#define NR_FILE_DESCRIPTORS   16
 
 typedef struct s_stackframe {
     u32 gs;
@@ -86,7 +86,7 @@ typedef struct s_proc {
     int interrupt;
     u32 receivefrom;
     MessageQueue queue;
-    FileDescriptor *fileDescriptor[NR_FILES];
+    FileDescriptor *file_descriptor[NR_FILE_DESCRIPTORS];
 } Process;
 
 
