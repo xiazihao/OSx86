@@ -83,7 +83,7 @@ static void init_fs() {
      * init file_descriptor_table
      */
     for (int i = 0; i < NR_DESCRIPTOR_CACHE; ++i) {
-        file_descriptor_table[i].fd_inode = NULL;
+        file_descriptor_table[i].inode_nr = 0;
     }
 }
 
@@ -222,16 +222,15 @@ Inode *get_inode(int dev, int num) {
     }
     Inode *insert = NULL;
     for (Inode *position = inode_cache; position < &inode_cache[NR_INODE_CACHE]; ++position) {
-        if (position->i_count) {
+        if (position->i_alive == TRUE) {
             if (position->i_dev == dev && num == position->i_num) {
-                position->i_count++;
-                printf("A:get inode at:%d\n", (int) (position - inode_cache));
+                printf("inode in cache at :%d\n", (int) (position - inode_cache));
                 return position;
             }
         } else { // empty inode cache
             if (insert == NULL) {
                 insert = position;
-                printf("B:get inode at:%d\n", (int) (position - inode_cache));
+                printf("alloc an inode position in cache at:%d\n", (int) (position - inode_cache));
             }
         }
     }
@@ -245,7 +244,7 @@ Inode *get_inode(int dev, int num) {
 //    assert(inode_array_start == superBlock->nr_sector_map_sects + 3);
     read_hd(fsbuf, SECTOR_SIZE, 6, inode_array_start);
     memcpy(insert, &fsbuf[INODE_SIZE * (((num) % (SECTOR_SIZE / INODE_SIZE)))], INODE_SIZE);
-    insert->i_count = 1;
+    insert->i_alive = TRUE;
     insert->i_dev = dev;
     insert->i_num = num;
     return insert;
@@ -253,7 +252,8 @@ Inode *get_inode(int dev, int num) {
 
 int free_inode(Inode *inode) {
     assert(inode >= inode_cache && inode < (inode_cache + NR_INODE_CACHE));
-    inode->i_count--;
+    inode->i_alive = FALSE;
+    sync_inode(inode);
 }
 
 /**

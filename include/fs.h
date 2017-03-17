@@ -12,6 +12,7 @@
 #define MAGIC_V1    0x222
 #define NR_INODE_CACHE  64
 #define NR_DESCRIPTOR_CACHE  128
+#define FILE_BUFF       64
 typedef struct s_super_block {
     u32 magic;                      //magic number
     u32 nr_inode;                   //the number of inode
@@ -45,11 +46,11 @@ typedef struct s_inode {
      * Below elements only exist in memory not store in hard drive
      */
     int i_dev;                  // The device which that inode get from
-    int i_count;                // The number of processes which share this inode
+    bool i_alive;                // Whether alive in cache
     int i_num;                  //
 } Inode;
 
-#define INODE_SIZE (sizeof(Inode) - 3*sizeof(int))
+#define INODE_SIZE (sizeof(Inode) - 2*sizeof(int) - sizeof(bool))
 
 #define MAX_FILE_NAME_LENGTH    12
 
@@ -61,9 +62,12 @@ typedef struct s_dir_entry {
 #define DIR_ENTRY_SIZE  sizeof(DirEntry)
 
 typedef struct s_file_descriptor {
-    u32 fd_mode;
-    int fd_position;
-    Inode *fd_inode;
+    u32 fd_mode;        //file mode:readable writeable
+    int inode_nr;       //inode number
+    char buf[64];
+    u32 count;
+    u32 start;
+    u32 end;
 } FileDescriptor;
 
 typedef struct {

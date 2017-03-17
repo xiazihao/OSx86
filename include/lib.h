@@ -6,10 +6,13 @@
 #define CHP6_LIB_H
 
 #include <type.h>
+
 //klib.c
 void *memcpy(void *pDst, void *pSrc, int iSize);
 
 void memset(void const *p_dst, char ch, int size);
+
+bool cmpstr(char const *str1, char const *str2);
 
 int physic_copy(void *dest, void *src, int size);
 

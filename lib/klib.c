@@ -83,7 +83,7 @@ void *memcpy(void *pDst, void *pSrc, int iSize) {
     }
 }
 
-char *strcpy(char  *p_dst, char const *p_src) {
+char *strcpy(char *p_dst, char const *p_src) {
     char *p_d = p_dst;
     char const *p_s = p_src;
     while (*p_s) {
@@ -93,12 +93,27 @@ char *strcpy(char  *p_dst, char const *p_src) {
     }
 }
 
+bool cmpstr(char const *str1, char const *str2) {
+    while (*str1 && *str2) {
+        if (*str1 != *str2) {
+            return FALSE;
+        }
+        str1++;
+        str2++;
+    }
+    if (*str1 == *str2) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 void memset(void const *p_dst, char ch, int size) {
     char *p_d = (char *) p_dst;
     for (int i = 0; i < size; ++i) {
         *p_d++ = ch;
     }
 }
+
 int physic_copy(void *dest, void *src, int size) {
     u8 *pD = dest;
     u8 *pS = src;
@@ -108,6 +123,7 @@ int physic_copy(void *dest, void *src, int size) {
         pS++;
     }
 }
+
 void *virtual2Linear(u32 pid, void *virtual) {
     assert(pid >= 0 && pid < NR_TASKS + NR_CONSOLES);
     Descriptor *descriptor = &(process_table[pid].ldts[INDEX_LDT_RW]);
